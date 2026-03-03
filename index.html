@@ -911,7 +911,7 @@
 const MODES = {
   screen: {
     label: '📋 Resume / Batch Screening',
-    chips: ['Screen & assess fit', 'Rank all candidates', 'Who should I interview first?', 'Generate outreach for top candidates'],
+    chips: ['Screen & assess fit', 'Generate outreach for top candidates'],
     systemPrompt: `You are an expert recruiter assistant. Analyze resumes against a job description and respond in this EXACT format:
 
 ━━━ SCREENING RESULT ━━━
@@ -4003,6 +4003,13 @@ function loadScript(src) {
 
 function useChip(text) {
   const input = document.getElementById('user-input');
+
+  // ── Screen mode: "Generate outreach for top candidates" fires inline generation ──
+  if (currentMode === 'screen' && text === 'Generate outreach for top candidates') {
+    generateBatchOutreachInline();
+    return;
+  }
+
   // For search mode, expand chip into a proper prompt
   if (currentMode === 'search') {
     const searchPrompts = {
@@ -4028,6 +4035,86 @@ function useChip(text) {
   }
   input.value = text;
   autoResize(input);
+}
+
+async function generateBatchOutreachInline() {
+  const apiKey = document.getElementById('api-key').value.trim();
+  if (!isKeyValid(apiKey)) { alert('Please add a valid API key in the sidebar first.'); return; }
+
+  const jd = document.getElementById('ctx-jd').value.trim();
+  const pastedResume = document.getElementById('ctx-resume').value.trim();
+  const resumeText = resumeFileText || pastedResume;
+  const validBatch = batchFiles.filter(f => f && f.text);
+
+  // Build candidate list (same logic as sendMessage)
+  const candidates = [];
+  if (resumeText) candidates.push({ name: 'Candidate 1', text: resumeText });
+  validBatch.forEach((f, i) => candidates.push({ name: f.name.replace(/\.[^.]+$/, ''), text: f.text }));
+
+  if (!candidates.length) {
+    addMessage('ai', '⚠️ Please upload at least one CV/resume before generating outreach messages.');
+    return;
+  }
+  if (!jd) {
+    addMessage('ai', '⚠️ Please paste the Job Description in the JD panel on the left before generating outreach.');
+    return;
+  }
+
+  // Show user message
+  addMessage('user', '✉️ Generate outreach messages for top candidates');
+  chatHistory.push({ role: 'user', content: '✉️ Generate outreach for top candidates' });
+
+  // Typing indicator
+  const container = document.getElementById('chat-container');
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'msg ai'; typingDiv.id = 'typing-outreach';
+  typingDiv.innerHTML = `<div class="avatar">🤖</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  container.appendChild(typingDiv);
+  container.scrollTop = 99999;
+
+  // Build prompt
+  const recruiterName = document.getElementById('ol-name')?.value?.trim() || 'the Recruiter';
+  const companyName   = document.getElementById('ol-company')?.value?.trim() || 'our company';
+
+  let msgContent = `[JOB DESCRIPTION]\n${jd}\n\n`;
+  candidates.forEach((c, i) => {
+    msgContent += `[CANDIDATE ${i + 1} — ${c.name}]\n${c.text}\n\n`;
+  });
+  msgContent += `[REQUEST]
+You are ${recruiterName} from the talent team at ${companyName}.
+
+For EACH candidate above, generate a personalised LinkedIn outreach message. Only generate outreach for candidates who are a reasonable fit for the role (Strong Fit, Good Fit, or Partial Fit). Skip candidates who are clearly not a fit.
+
+For each message use this format:
+
+---
+**✉️ Outreach — [Candidate Name]**
+**Fit Level:** [🟢 Strong / 🟡 Good / 🟠 Partial]
+**Subject:** [compelling subject line referencing their specific background]
+
+Hi [First Name],
+
+[Para 1: 1 sentence intro — who you are and company]
+[Para 2: 1-2 sentences — specific thing from their background that caught your attention + why it fits this role]
+[Para 3: 1 sentence — what's exciting about this opportunity for them specifically]
+[CTA: soft ask — 15-min chat, no pressure]
+
+Best regards,
+${recruiterName}
+---
+
+Keep each message under 120 words. Personal, warm, specific — not generic. Reference actual skills or experience from their CV.`;
+
+  try {
+    const reply = await callAI(MODES.screen.systemPrompt, [{ role: 'user', content: msgContent }], 2500);
+    document.getElementById('typing-outreach')?.remove();
+    chatHistory.push({ role: 'assistant', content: reply });
+    addMessage('ai', reply);
+  } catch(e) {
+    document.getElementById('typing-outreach')?.remove();
+    addMessage('ai', '⚠️ Error generating outreach: ' + e.message);
+  }
+  container.scrollTop = container.scrollHeight;
 }
 
 function checkKey() {
@@ -4242,6 +4329,9 @@ function addOutreachCTA(reply, isBatch, singleResumeText, batchFilesList, jd) {
     window._batchCandidates = candidates;
     window._batchJD = jd;
 
+    // Remove any previously rendered batch CTA panel to prevent duplicates
+    document.querySelectorAll('.batch-cta-panel').forEach(el => el.remove());
+
     const rows = candidates.map((c, i) => {
       const cLower = c.name.toLowerCase();
       const snippet = reply.substring(Math.max(0, lowerReply.indexOf(cLower) - 20), lowerReply.indexOf(cLower) + 300);
@@ -4252,30 +4342,29 @@ function addOutreachCTA(reply, isBatch, singleResumeText, batchFilesList, jd) {
       const fitIcon = cStrong ? '🟢' : cGood ? '🟡' : cPartial ? '🟠' : '🔴';
 
       return `
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-            <span style="font-size:1rem;">${fitIcon}</span>
-            <span style="font-weight:600;font-size:0.85rem;flex:1;">${c.name}</span>
-          </div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px;">
-            ${cFit ? `
-            <button class="psa-btn psa-green psa-sm" onclick="runBatchAction('outreach-personal',${i})">✉️ Outreach</button>
-            <button class="psa-btn psa-blue psa-sm"  onclick="runBatchAction('outreach-linkedin',${i})">💼 InMail</button>
-            ` : ''}
-            <button class="psa-btn psa-purple psa-sm" onclick="runBatchAction('gap',${i})">🔎 Gap Analysis</button>
-            <button class="psa-btn psa-red psa-sm"    onclick="runBatchAction('redflags',${i})">🚩 Red Flags</button>
-            <button class="psa-btn psa-gold psa-sm"   onclick="runBatchAction('interview',${i})">🎯 Interview Qs</button>
+        <div style="display:flex;align-items:center;gap:6px;padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:5px;flex-wrap:wrap;">
+          <span>${fitIcon}</span>
+          <span style="font-weight:600;font-size:0.82rem;flex:1;min-width:100px;">${c.name}</span>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;">
+            ${cFit ? `<button class="psa-btn psa-green psa-sm" onclick="runBatchAction('outreach-personal',${i})">✉️ Outreach</button>
+            <button class="psa-btn psa-blue psa-sm" onclick="runBatchAction('outreach-linkedin',${i})">💼 InMail</button>` : ''}
+            <button class="psa-btn psa-purple psa-sm" onclick="runBatchAction('gap',${i})">🔎 Gaps</button>
+            <button class="psa-btn psa-red psa-sm" onclick="runBatchAction('redflags',${i})">🚩 Flags</button>
+            <button class="psa-btn psa-gold psa-sm" onclick="runBatchAction('interview',${i})">🎯 Qs</button>
           </div>
         </div>`;
     }).join('');
 
+    cta.className = 'batch-cta-panel';
     cta.innerHTML = `
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;">
-        <div style="font-size:0.8rem;font-weight:600;color:var(--text);margin-bottom:10px;">📋 Next Steps — Per Candidate</div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
+        <div style="font-size:0.7rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">⚡ Actions — per candidate</div>
         ${rows}
       </div>`;
   }
 
+  // Remove any existing batch-cta-panel before appending new one
+  document.querySelectorAll('.batch-cta-panel').forEach(el => el.remove());
   container.appendChild(cta);
   container.scrollTop = container.scrollHeight;
 }
