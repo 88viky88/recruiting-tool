@@ -1600,279 +1600,1161 @@ function loadDemoData() {
   // Show ready state
   const content = document.getElementById('dash-content');
   content.innerHTML = `
-    <div style="background:linear-gradient(135deg,rgba(247,127,0,0.08),rgba(247,37,133,0.05));border:1.5px solid rgba(247,127,0,0.25);border-radius:14px;padding:20px 24px;">
-      <div style="font-size:1rem;font-weight:700;color:#f77f00;margin-bottom:8px;">🎯 Demo dataset loaded!</div>
-      <p style="font-size:0.85rem;color:var(--text);line-height:1.6;margin-bottom:12px;">
-        50 sample candidates across Engineering, Data, Product, Design, Sales and HR — with full hiring funnel data, sources, locations, skills, salaries and interview scores.
-      </p>
-      <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:14px;">
-        👆 Click any analysis button above to generate a dashboard. <strong>You still need an API key</strong> for AI generation — but you can also click the button below to see a pre-built static demo dashboard instantly, with no API key needed.
-      </p>
-      <button onclick="showStaticDemo()" style="background:linear-gradient(135deg,#4361ee,#7209b7);color:white;border:none;border-radius:10px;padding:9px 20px;font-family:inherit;font-size:0.82rem;font-weight:700;cursor:pointer;">
-        ⚡ View Pre-built Demo Dashboard (No API Key)
-      </button>
-    </div>`;
-}
-
-function showStaticDemo() {
-  const content = document.getElementById('dash-content');
-  const demoHTML = buildStaticDemoHTML();
-  const blob = new Blob([demoHTML], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  content.innerHTML = `
-    <div style="background:white;border:1.5px solid var(--border);border-radius:14px;overflow:hidden;">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1.5px solid var(--border);">
-        <div style="font-weight:700;font-size:0.9rem;">📊 Demo Dashboard — 50 Sample Candidates</div>
-        <div style="display:flex;gap:8px;">
-          <button onclick="document.getElementById('demo-iframe').requestFullscreen()" style="background:white;border:1.5px solid var(--border);border-radius:6px;padding:4px 10px;font-size:0.72rem;cursor:pointer;">⛶ Fullscreen</button>
-          <a href="${url}" download="demo-dashboard.html" style="background:rgba(67,97,238,0.08);border:1.5px solid rgba(67,97,238,0.25);border-radius:6px;padding:4px 10px;font-size:0.72rem;cursor:pointer;color:var(--accent);text-decoration:none;font-weight:600;">⬇ Download</a>
-        </div>
+    <div style="background:linear-gradient(135deg,rgba(67,97,238,0.06),rgba(247,37,133,0.04));border:1.5px solid rgba(67,97,238,0.2);border-radius:16px;padding:22px 24px;">
+      <div style="font-size:1rem;font-weight:800;color:#1e293b;margin-bottom:4px;">🎯 Demo Dataset Loaded</div>
+      <p style="font-size:0.8rem;color:#6b7280;margin-bottom:18px;">50 sample candidates · Engineering, Data, Product, Design, Sales, HR · Click any mode to preview it instantly — no API key needed.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;">
+        <button id="db-ti"  class="demo-mode-btn" style="background:#f0f4ff;border:1.5px solid #c7d2fe;color:#3730a3;">🧠 Talent Intelligence</button>
+        <button id="db-ov"  class="demo-mode-btn" style="background:#f0fdf4;border:1.5px solid #bbf7d0;color:#166534;">🔍 Smart Overview</button>
+        <button id="db-ch"  class="demo-mode-btn" style="background:#fff7ed;border:1.5px solid #fed7aa;color:#c2410c;">📈 Charts &amp; Trends</button>
+        <button id="db-co"  class="demo-mode-btn" style="background:#fdf4ff;border:1.5px solid #e9d5ff;color:#7e22ce;">🔗 Correlations</button>
+        <button id="db-st"  class="demo-mode-btn" style="background:#f8fafc;border:1.5px solid #cbd5e1;color:#334155;">🧮 Statistical Summary</button>
+        <button id="db-fn"  class="demo-mode-btn" style="background:#fff1f2;border:1.5px solid #fecdd3;color:#be123c;">🎯 Hiring Funnel</button>
+        <button id="db-di"  class="demo-mode-btn" style="background:#ecfdf5;border:1.5px solid #a7f3d0;color:#065f46;">🌍 Diversity &amp; Inclusion</button>
+        <button id="db-tt"  class="demo-mode-btn" style="background:#eff6ff;border:1.5px solid #bfdbfe;color:#1d4ed8;">⏱️ Time-to-Hire</button>
+        <button id="db-so"  class="demo-mode-btn" style="background:#fefce8;border:1.5px solid #fde68a;color:#92400e;">📡 Source Effectiveness</button>
+        <button id="db-pr"  class="demo-mode-btn" style="background:#fdf2f8;border:1.5px solid #fbcfe8;color:#9d174d;">🔮 Predictive Insights</button>
       </div>
-      <iframe id="demo-iframe" src="${url}" style="width:100%;height:1100px;border:none;" sandbox="allow-scripts allow-same-origin"></iframe>
     </div>`;
-}
-
-function buildStaticDemoHTML() {
-  // Parse DEMO_CSV
-  const lines = DEMO_CSV.trim().split('\n');
-  const headers = lines[0].split(',');
-  const rows = lines.slice(1).map(l => {
-    const vals = l.split(',');
-    const obj = {};
-    headers.forEach((h, i) => obj[h.trim()] = (vals[i]||'').trim());
-    return obj;
-  });
-
-  const hired = rows.filter(r => r.status === 'Hired');
-  const rejected = rows.filter(r => r.status === 'Rejected');
-  const avgTTH = Math.round(hired.reduce((s,r) => s + parseInt(r.days_to_hire||0), 0) / hired.length);
-  const avgScore = Math.round(hired.reduce((s,r) => s + parseInt(r.interview_score||0), 0) / hired.length);
-  const offerRate = Math.round((hired.length / rows.length) * 100);
-
-  // Count by source
-  const sourceCounts = {};
-  rows.forEach(r => { sourceCounts[r.source] = (sourceCounts[r.source]||0) + 1; });
-  const topSources = Object.entries(sourceCounts).sort((a,b)=>b[1]-a[1]);
-
-  // Count by dept
-  const deptCounts = {};
-  hired.forEach(r => { deptCounts[r.department] = (deptCounts[r.department]||0) + 1; });
-  const depts = Object.entries(deptCounts).sort((a,b)=>b[1]-a[1]);
-
-  // TTH by dept
-  const deptTTH = {};
-  hired.forEach(r => {
-    if (!deptTTH[r.department]) deptTTH[r.department] = [];
-    deptTTH[r.department].push(parseInt(r.days_to_hire||0));
-  });
-  const deptTTHAvg = Object.entries(deptTTH).map(([d,vals]) => [d, Math.round(vals.reduce((a,b)=>a+b,0)/vals.length)]).sort((a,b)=>b[1]-a[1]);
-
-  // Gender split
-  const genderCounts = {};
-  hired.forEach(r => { genderCounts[r.gender] = (genderCounts[r.gender]||0) + 1; });
-
-  // Locations
-  const locCounts = {};
-  hired.forEach(r => { locCounts[r.location] = (locCounts[r.location]||0) + 1; });
-  const topLocs = Object.entries(locCounts).sort((a,b)=>b[1]-a[1]);
-
-  // Monthly hiring trend
-  const monthHires = {};
-  hired.forEach(r => {
-    const m = r.applied_date ? r.applied_date.slice(0,7) : 'Unknown';
-    monthHires[m] = (monthHires[m]||0) + 1;
-  });
-  const months = Object.keys(monthHires).sort();
-  const monthVals = months.map(m => monthHires[m]);
-
-  // Skills
-  const skillCounts = {};
-  rows.forEach(r => {
-    (r.skills||'').split(',').forEach(s => {
-      s = s.trim().replace(/"/g,'');
-      if (s) skillCounts[s] = (skillCounts[s]||0) + 1;
+  // Attach listeners after innerHTML (onclick in template literals is stripped by browsers)
+  const demoModes = {
+    'db-ti':'talent_intelligence','db-ov':'overview','db-ch':'charts',
+    'db-co':'correlation','db-st':'stats','db-fn':'funnel',
+    'db-di':'diversity','db-tt':'time','db-so':'source','db-pr':'forecast'
+  };
+  requestAnimationFrame(() => {
+    // Style all buttons
+    document.querySelectorAll('.demo-mode-btn').forEach(b => {
+      b.style.cssText += ';border-radius:10px;padding:10px 14px;font-family:inherit;font-size:0.8rem;font-weight:700;cursor:pointer;text-align:left;transition:transform 0.15s,box-shadow 0.15s;';
+      b.addEventListener('mouseenter', () => { b.style.transform='translateY(-2px)'; b.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'; });
+      b.addEventListener('mouseleave', () => { b.style.transform=''; b.style.boxShadow=''; });
+    });
+    Object.entries(demoModes).forEach(([id, mode]) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('click', () => showDemoFor(mode));
     });
   });
-  const topSkills = Object.entries(skillCounts).sort((a,b)=>b[1]-a[1]).slice(0,10);
+}
 
-  return `<!DOCTYPE html>
-<html><head><meta charset="UTF-8">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
-<style>
-  * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:system-ui,sans-serif; background:#f0f4ff; padding:20px; }
-  h1 { font-size:1.4rem; font-weight:800; color:#1e293b; margin-bottom:4px; }
-  .sub { font-size:0.82rem; color:#6b7280; margin-bottom:20px; }
-  .kpi-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; margin-bottom:20px; }
-  .kpi { background:white; border-radius:12px; padding:14px 16px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
-  .kpi .val { font-size:1.6rem; font-weight:800; color:#4361ee; line-height:1; margin-bottom:4px; }
-  .kpi .lbl { font-size:0.72rem; color:#6b7280; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
-  .grid { display:grid; gap:16px; margin-bottom:16px; }
-  .g2 { grid-template-columns:1fr 1fr; }
-  .g3 { grid-template-columns:1fr 1fr 1fr; }
-  .card { background:white; border-radius:12px; padding:18px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
-  .card h3 { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#4361ee; border-bottom:2px solid #4361ee; padding-bottom:6px; margin-bottom:14px; }
-  .chart-wrap { position:relative; height:220px; }
-  .caption { font-size:12px; color:#6b7280; margin-top:8px; font-style:italic; }
-  table { width:100%; border-collapse:collapse; font-size:13px; }
-  th { background:#f1f5f9; padding:8px 10px; font-size:11px; text-transform:uppercase; letter-spacing:.5px; text-align:left; font-weight:700; color:#374151; }
-  td { padding:8px 10px; border-bottom:1px solid #f1f5f9; }
-  .badge { display:inline-flex; align-items:center; border-radius:20px; padding:2px 8px; font-size:11px; font-weight:600; }
-  .green { background:#dcfce7; color:#16a34a; }
-  .amber { background:#fef9c3; color:#b45309; }
-  .red { background:#fee2e2; color:#dc2626; }
-  .bar-cell { display:flex; align-items:center; gap:8px; }
-  .bar { height:8px; border-radius:4px; background:#4361ee; min-width:4px; }
-  .strat { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
-  .strat-card { border-radius:10px; padding:14px; }
-  .strat-card h4 { font-size:12px; font-weight:700; margin-bottom:8px; }
-  .strat-card li { font-size:12px; line-height:1.6; margin-left:14px; color:#374151; }
-  @media(max-width:700px){ .g2,.g3,.strat{grid-template-columns:1fr;} }
-</style>
-</head><body>
-<h1>📊 Recruiting Analytics Dashboard</h1>
-<p class="sub">Demo dataset · 50 candidates · Jan–May 2024 · Generated by RecruiterAI</p>
+function showDemoFor(mode) {
+  const labels = {
+    talent_intelligence:'🧠 Talent Intelligence', overview:'🔍 Smart Overview',
+    charts:'📈 Charts & Trends', correlation:'🔗 Correlations',
+    stats:'🧮 Statistical Summary', funnel:'🎯 Hiring Funnel',
+    diversity:'🌍 Diversity & Inclusion', time:'⏱️ Time-to-Hire Analysis',
+    source:'📡 Source Effectiveness', forecast:'🔮 Predictive Insights'
+  };
+  const builders = {
+    talent_intelligence: buildDemoTalentIntelligence,
+    overview: buildDemoOverview,
+    charts: buildDemoCharts,
+    correlation: buildDemoCorrelation,
+    stats: buildDemoStats,
+    funnel: buildDemoFunnel,
+    diversity: buildDemoDiversity,
+    time: buildDemoTime,
+    source: buildDemoSource,
+    forecast: buildDemoForecast
+  };
+  const html = builders[mode]();
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const container = document.getElementById('dash-content');
+  container.innerHTML = `
+    <div style="background:white;border:1.5px solid #e2e8f0;border-radius:14px;overflow:hidden;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1.5px solid #e2e8f0;background:#f8fafc;">
+        <div style="font-weight:700;font-size:0.88rem;color:#1e293b;">📊 ${labels[mode]} — Demo Preview</div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="loadDemoData()" style="background:white;border:1.5px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:0.72rem;cursor:pointer;font-family:inherit;">← Back</button>
+          <button onclick="document.getElementById('demo-main-iframe').requestFullscreen()" style="background:white;border:1.5px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:0.72rem;cursor:pointer;font-family:inherit;">⛶ Fullscreen</button>
+          <a href="${url}" download="demo-${mode}.html" style="background:rgba(67,97,238,0.08);border:1.5px solid rgba(67,97,238,0.25);border-radius:6px;padding:4px 10px;font-size:0.72rem;color:#4361ee;text-decoration:none;font-weight:600;font-family:inherit;">⬇ Download</a>
+        </div>
+      </div>
+      <iframe id="demo-main-iframe" src="${url}" style="width:100%;height:1100px;border:none;" sandbox="allow-scripts allow-same-origin"></iframe>
+    </div>`;
+}
 
-<!-- KPI Strip -->
+// ── Shared CSS for all demo dashboards ──
+function demoCss() {
+  return `<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f4ff;padding:20px;color:#1e293b;}
+h1{font-size:1.4rem;font-weight:800;color:#1e293b;margin-bottom:2px;}
+.sub{font-size:0.78rem;color:#6b7280;margin-bottom:18px;}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:18px;}
+.kpi{background:white;border-radius:12px;padding:14px 16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-top:3px solid #4361ee;}
+.kpi.pink{border-top-color:#f72585;}.kpi.orange{border-top-color:#f77f00;}.kpi.teal{border-top-color:#06b6d4;}.kpi.green{border-top-color:#0a9c5a;}.kpi.purple{border-top-color:#7209b7;}
+.kpi .val{font-size:1.5rem;font-weight:800;color:#1e293b;line-height:1;margin-bottom:3px;}
+.kpi .lbl{font-size:0.68rem;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+.grid{display:grid;gap:16px;margin-bottom:16px;}
+.g2{grid-template-columns:1fr 1fr;}.g3{grid-template-columns:1fr 1fr 1fr;}.g13{grid-template-columns:1fr 3fr;}.g31{grid-template-columns:3fr 1fr;}
+.card{background:white;border-radius:12px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.card h3{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:#4361ee;border-bottom:2px solid #e0e7ff;padding-bottom:6px;margin-bottom:14px;}
+.chart-wrap{position:relative;height:220px;}
+.caption{font-size:11px;color:#94a3b8;margin-top:8px;font-style:italic;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+th{background:#f8fafc;padding:7px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;text-align:left;font-weight:700;color:#64748b;border-bottom:2px solid #e2e8f0;}
+td{padding:7px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+tr:hover td{background:#f8fafc;}
+.badge{display:inline-flex;align-items:center;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;}
+.bg{background:#dcfce7;color:#16a34a;}.ba{background:#fef9c3;color:#a16207;}.br{background:#fee2e2;color:#dc2626;}.bb{background:#dbeafe;color:#1d4ed8;}.bp{background:#f3e8ff;color:#7e22ce;}
+.prog{height:6px;border-radius:3px;background:#e2e8f0;overflow:hidden;margin-top:2px;min-width:60px;}
+.prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#4361ee,#7209b7);}
+.strat{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.sc{border-radius:10px;padding:14px;}
+.sc h4{font-size:11px;font-weight:800;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;}
+.sc li{font-size:12px;line-height:1.7;margin-left:14px;color:#475569;}
+@media(max-width:700px){.g2,.g3,.strat{grid-template-columns:1fr;}}
+</style>`;
+}
+
+// ── Chart.js script tag ──
+function chartScript(charts) {
+  return `<script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><script>
+const PAL=['#4361ee','#f72585','#f77f00','#06b6d4','#0a9c5a','#7209b7','#e5383b','#ffd166','#06d6a0','#118ab2','#ef476f','#ffc8dd'];
+function C(id,type,labels,datasets,opts){
+  const ctx=document.getElementById(id);if(!ctx)return;
+  new Chart(ctx.getContext('2d'),{type,data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:12}}},scales:type==='doughnut'||type==='pie'?{}:{y:{beginAtZero:true,ticks:{font:{size:10}}},x:{ticks:{font:{size:10}}}},...(opts||{})}});
+}
+${charts}
+<\/script>`;
+}
+
+// ── Parse DEMO_CSV into rows once ──
+function parseDemoRows() {
+  const lines = DEMO_CSV.trim().split('\n');
+  const headers = lines[0].split(',');
+  return lines.slice(1).map(l => {
+    const vals = l.split(',');
+    const o = {};
+    headers.forEach((h,i) => o[h.trim()] = (vals[i]||'').trim());
+    return o;
+  });
+}
+
+// ═══════════════════════════════════════
+// 1. TALENT INTELLIGENCE
+// ═══════════════════════════════════════
+function buildDemoTalentIntelligence() {
+  const rows = parseDemoRows();
+  const hired = rows.filter(r=>r.status==='Hired');
+
+  const srcC={}, deptC={}, locC={}, skillC={}, expC={'0-2':0,'3-5':0,'6-8':0,'9+':0};
+  rows.forEach(r=>{
+    srcC[r.source]=(srcC[r.source]||0)+1;
+    if(r.status==='Hired') deptC[r.department]=(deptC[r.department]||0)+1;
+    locC[r.location]=(locC[r.location]||0)+1;
+    (r.skills||'').split(',').forEach(s=>{s=s.trim().replace(/"/g,'');if(s)skillC[s]=(skillC[s]||0)+1;});
+    const exp=parseInt(r.experience_years||0);
+    if(exp<=2)expC['0-2']++; else if(exp<=5)expC['3-5']++; else if(exp<=8)expC['6-8']++; else expC['9+']++;
+  });
+
+  const topSrc = Object.entries(srcC).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const topDept = Object.entries(deptC).sort((a,b)=>b[1]-a[1]);
+  const topLoc = Object.entries(locC).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const topSkills = Object.entries(skillC).sort((a,b)=>b[1]-a[1]).slice(0,12);
+
+  const avgSal = Math.round(hired.filter(r=>parseInt(r.salary_offered)>0).reduce((s,r)=>s+parseInt(r.salary_offered),0)/hired.filter(r=>parseInt(r.salary_offered)>0).length);
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">${demoCss()}</head><body>
+<h1>🧠 Talent Intelligence Dashboard</h1>
+<p class="sub">Market intelligence · 50 candidates · Engineering, Data, Product, Design and more</p>
+
 <div class="kpi-row">
-  <div class="kpi"><div class="val">${rows.length}</div><div class="lbl">Total Candidates</div></div>
-  <div class="kpi"><div class="val">${hired.length}</div><div class="lbl">Total Hires</div></div>
-  <div class="kpi"><div class="val">${offerRate}%</div><div class="lbl">Hire Rate</div></div>
-  <div class="kpi"><div class="val">${avgTTH}d</div><div class="lbl">Avg Time-to-Hire</div></div>
-  <div class="kpi"><div class="val">${avgScore}</div><div class="lbl">Avg Interview Score</div></div>
-  <div class="kpi"><div class="val">${topSources[0][0]}</div><div class="lbl">Top Source</div></div>
+  <div class="kpi"><div class="val">${rows.length}</div><div class="lbl">Talent Pool</div></div>
+  <div class="kpi pink"><div class="val">${hired.length}</div><div class="lbl">Total Hires</div></div>
+  <div class="kpi orange"><div class="val">${topSkills[0][0]}</div><div class="lbl">Top Skill</div></div>
+  <div class="kpi teal"><div class="val">${topSrc[0][0]}</div><div class="lbl">Top Source</div></div>
+  <div class="kpi green"><div class="val">₹${Math.round(avgSal/1000)}k</div><div class="lbl">Avg Salary</div></div>
+  <div class="kpi purple"><div class="val">${topDept[0][0]}</div><div class="lbl">Top Dept</div></div>
 </div>
 
-<!-- Row 1: Monthly Trend + Source Mix -->
 <div class="grid g2">
   <div class="card">
-    <h3>Monthly Hiring Trend</h3>
-    <div class="chart-wrap"><canvas id="c1"></canvas></div>
-    <p class="caption">Hiring ramped up consistently from Jan to May 2024, with Engineering leading volume.</p>
+    <h3>Top Employer / Source Distribution</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center;">
+      <table><tr><th>#</th><th>Source</th><th>Count</th><th>Share</th></tr>
+      ${topSrc.map((s,i)=>`<tr><td><b>${i+1}</b></td><td>${s[0]}</td><td>${s[1]}</td><td><div class="prog"><div class="prog-fill" style="width:${Math.round(s[1]/rows.length*100)}%"></div></div><span style="font-size:10px;color:#6b7280">${Math.round(s[1]/rows.length*100)}%</span></td></tr>`).join('')}
+      </table>
+      <div style="position:relative;height:180px;"><canvas id="ti1"></canvas></div>
+    </div>
+    <p class="caption">${topSrc[0][0]} dominates at ${Math.round(topSrc[0][1]/rows.length*100)}% of all talent. Referrals and niche channels show higher quality conversion.</p>
   </div>
   <div class="card">
-    <h3>Source Mix</h3>
-    <div class="chart-wrap"><canvas id="c2"></canvas></div>
-    <p class="caption">LinkedIn dominates sourcing at ${Math.round(sourceCounts['LinkedIn']/rows.length*100)}% of all applicants. Referrals show highest quality.</p>
+    <h3>Skills Landscape — Top 12 by Demand</h3>
+    <div class="chart-wrap"><canvas id="ti2"></canvas></div>
+    <p class="caption">${topSkills[0][0]}, ${topSkills[1][0]} and ${topSkills[2][0]} are the most in-demand skills. Cloud and ML skills show rapid growth trajectory.</p>
   </div>
 </div>
 
-<!-- Row 2: Dept Hires + TTH by Dept -->
 <div class="grid g2">
   <div class="card">
-    <h3>Hires by Department</h3>
-    <div class="chart-wrap"><canvas id="c3"></canvas></div>
-    <p class="caption">Engineering accounts for the majority of hires, followed by Data and Product.</p>
+    <h3>Geography — Talent Hub Distribution</h3>
+    <div class="chart-wrap"><canvas id="ti3"></canvas></div>
+    <p class="caption">${topLoc[0][0]} is the primary talent hub. Remote talent represents a significant and growing share of the pool.</p>
   </div>
   <div class="card">
-    <h3>Avg Time-to-Hire by Department (days)</h3>
-    <div class="chart-wrap"><canvas id="c4"></canvas></div>
-    <p class="caption">Data and Engineering roles take longest. Legal and HR close fastest.</p>
+    <h3>Experience Band Distribution</h3>
+    <div style="position:relative;height:190px;"><canvas id="ti4"></canvas></div>
+    <p class="caption">Mid-level talent (3-8 years) forms the bulk of the pipeline. Senior profiles (9+) are scarce and highly contested.</p>
   </div>
 </div>
 
-<!-- Row 3: Top Skills + Geography -->
-<div class="grid g2">
+<div class="grid g3">
   <div class="card">
-    <h3>Top Skills in Demand</h3>
-    <div class="chart-wrap"><canvas id="c5"></canvas></div>
-    <p class="caption">Python, AWS and SQL are the most in-demand skills across all roles.</p>
+    <h3>Department Breakdown</h3>
+    <table>${topDept.map((d,i)=>`<tr><td><span class="badge bb">${i+1}</span></td><td><b>${d[0]}</b></td><td>${d[1]} hires</td><td><div class="prog"><div class="prog-fill" style="width:${Math.round(d[1]/hired.length*100)}%;background:${['#4361ee','#f72585','#f77f00','#06b6d4','#0a9c5a','#7209b7'][i%6]}"></div></div></td></tr>`).join('')}</table>
   </div>
   <div class="card">
-    <h3>Candidate Locations</h3>
-    <div class="chart-wrap"><canvas id="c6"></canvas></div>
-    <p class="caption">Bengaluru leads talent supply. Remote candidates form a strong 2nd tier.</p>
+    <h3>Compensation Bands by Department</h3>
+    <table><tr><th>Dept</th><th>Avg Salary</th><th>Range</th></tr>
+    ${topDept.map(d=>{
+      const dh=hired.filter(r=>r.department===d[0]&&parseInt(r.salary_offered)>0);
+      if(!dh.length)return '';
+      const sals=dh.map(r=>parseInt(r.salary_offered));
+      const avg=Math.round(sals.reduce((a,b)=>a+b,0)/sals.length);
+      const mn=Math.min(...sals),mx=Math.max(...sals);
+      return `<tr><td>${d[0]}</td><td><b>₹${Math.round(avg/1000)}k</b></td><td style="font-size:11px;color:#6b7280">₹${Math.round(mn/1000)}k–₹${Math.round(mx/1000)}k</td></tr>`;
+    }).join('')}
+    </table>
+  </div>
+  <div class="card">
+    <h3>Rising vs Declining Skills</h3>
+    <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:700;color:#0a9c5a;margin-bottom:6px;">▲ HIGH DEMAND</div>
+    ${topSkills.slice(0,5).map(s=>`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;font-size:12px;"><span>${s[0]}</span><span class="badge bg">${s[1]} mentions</span></div>`).join('')}</div>
+    <div><div style="font-size:10px;font-weight:700;color:#e5383b;margin-bottom:6px;">▼ LOWER DEMAND</div>
+    ${topSkills.slice(-4).map(s=>`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;font-size:12px;"><span>${s[0]}</span><span class="badge br">${s[1]} mentions</span></div>`).join('')}</div>
   </div>
 </div>
 
-<!-- Row 4: Gender + Interview Score Distribution -->
-<div class="grid g2">
-  <div class="card">
-    <h3>Gender Split (Hired)</h3>
-    <div class="chart-wrap"><canvas id="c7"></canvas></div>
-    <p class="caption">Female candidates represent ${Math.round((genderCounts['Female']||0)/hired.length*100)}% of hires, showing strong diversity outcomes.</p>
-  </div>
-  <div class="card">
-    <h3>Interview Score Distribution</h3>
-    <div class="chart-wrap"><canvas id="c8"></canvas></div>
-    <p class="caption">Most hired candidates scored 80-95, indicating consistent hiring bar.</p>
-  </div>
-</div>
-
-<!-- Candidates Table -->
-<div class="card" style="margin-bottom:16px;">
-  <h3>Top Hires — Full Detail</h3>
-  <div style="overflow-x:auto;">
-  <table>
-    <tr><th>#</th><th>Name</th><th>Role</th><th>Dept</th><th>Source</th><th>Location</th><th>TTH (days)</th><th>Salary</th><th>Score</th><th>Status</th></tr>
-    ${hired.slice(0,15).map((r,i) => `<tr>
-      <td>${i+1}</td><td><strong>${r.candidate_name}</strong></td><td>${r.role}</td><td>${r.department}</td>
-      <td>${r.source}</td><td>${r.location}</td>
-      <td><span class="badge ${parseInt(r.days_to_hire)>35?'red':parseInt(r.days_to_hire)>25?'amber':'green'}">${r.days_to_hire}d</span></td>
-      <td>₹${parseInt(r.salary_offered).toLocaleString()}</td>
-      <td><span class="badge ${parseInt(r.interview_score)>=85?'green':parseInt(r.interview_score)>=70?'amber':'red'}">${r.interview_score}</span></td>
-      <td><span class="badge green">✓ Hired</span></td>
-    </tr>`).join('')}
-  </table>
-  </div>
-</div>
-
-<!-- Strategic Callouts -->
 <div class="card">
   <h3>Strategic Intelligence</h3>
   <div class="strat">
-    <div class="strat-card" style="background:#fff7ed;border:1px solid #fed7aa;">
-      <h4 style="color:#c2410c;">⚠️ Risks</h4>
-      <ul>
-        <li>LinkedIn dependency (${Math.round(sourceCounts['LinkedIn']/rows.length*100)}%) — single-source risk</li>
-        <li>Data roles avg ${deptTTHAvg.find(d=>d[0]==='Data')?.[1]||'-'}d TTH — pipeline bottleneck</li>
-        <li>Offer decline rate indicates compensation gaps</li>
-        <li>Remote demand growing faster than remote offers</li>
-      </ul>
+    <div class="sc" style="background:#fff7ed;border:1px solid #fed7aa;"><h4 style="color:#c2410c;">⚠️ Risks</h4><ul>
+      <li>Over-reliance on ${topSrc[0][0]} (${Math.round(topSrc[0][1]/rows.length*100)}% of pipeline)</li>
+      <li>Senior talent (9+ yrs) severely under-represented</li>
+      <li>Geographic concentration risk in ${topLoc[0][0]}</li>
+      <li>Salary compression risk in ${topDept[0][0]}</li>
+    </ul></div>
+    <div class="sc" style="background:#f0fdf4;border:1px solid #bbf7d0;"><h4 style="color:#166534;">🎯 Opportunities</h4><ul>
+      <li>Referral channel shows highest quality conversion</li>
+      <li>${topSkills[0][0]} demand growing — build specialist pipeline</li>
+      <li>Remote talent pool is underutilised</li>
+      <li>${topDept[1]?.[0]} shows strong growth trajectory</li>
+    </ul></div>
+    <div class="sc" style="background:#eff6ff;border:1px solid #bfdbfe;"><h4 style="color:#1d4ed8;">✅ Actions</h4><ul>
+      <li>Expand referral programme with tiered incentives</li>
+      <li>Launch ${topSkills[0][0]} specialist sourcing campaign</li>
+      <li>Build remote-first JDs to access wider talent pools</li>
+      <li>Partner with 2 new niche job boards this quarter</li>
+    </ul></div>
+  </div>
+</div>
+${chartScript(`
+C('ti1','doughnut',${JSON.stringify(topSrc.map(s=>s[0]))},[{data:${JSON.stringify(topSrc.map(s=>s[1]))},backgroundColor:PAL}]);
+C('ti2','bar',${JSON.stringify(topSkills.map(s=>s[0]))},[{label:'Mentions',data:${JSON.stringify(topSkills.map(s=>s[1]))},backgroundColor:PAL,borderRadius:4}],{indexAxis:'y',plugins:{legend:{display:false}}});
+C('ti3','bar',${JSON.stringify(topLoc.map(l=>l[0]))},[{label:'Candidates',data:${JSON.stringify(topLoc.map(l=>l[1]))},backgroundColor:'#4361ee',borderRadius:4}],{indexAxis:'y',plugins:{legend:{display:false}}});
+C('ti4','doughnut',${JSON.stringify(Object.keys(expC))},[{data:${JSON.stringify(Object.values(expC))},backgroundColor:PAL}]);
+`)}
+</body></html>`;
+}
+
+// ═══════════════════════════════════════
+// 2. SMART OVERVIEW
+// ═══════════════════════════════════════
+function buildDemoOverview() {
+  const rows = parseDemoRows();
+  const hired = rows.filter(r=>r.status==='Hired');
+  const rejected = rows.filter(r=>r.status==='Rejected');
+  const avgTTH = Math.round(hired.reduce((s,r)=>s+parseInt(r.days_to_hire||0),0)/hired.length);
+  const hireRate = Math.round(hired.length/rows.length*100);
+
+  const monthC={}, srcC={}, deptC={}, locC={}, skillC={};
+  rows.forEach(r=>{
+    const m=r.applied_date?r.applied_date.slice(0,7):'Unknown';
+    monthC[m]=(monthC[m]||0)+1;
+    srcC[r.source]=(srcC[r.source]||0)+1;
+  });
+  hired.forEach(r=>{
+    deptC[r.department]=(deptC[r.department]||0)+1;
+    locC[r.location]=(locC[r.location]||0)+1;
+    (r.skills||'').split(',').forEach(s=>{s=s.trim().replace(/"/g,'');if(s)skillC[s]=(skillC[s]||0)+1;});
+  });
+
+  const months = Object.keys(monthC).sort();
+  const topSrc = Object.entries(srcC).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const topDept = Object.entries(deptC).sort((a,b)=>b[1]-a[1]);
+  const topLoc = Object.entries(locC).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const topSkills = Object.entries(skillC).sort((a,b)=>b[1]-a[1]).slice(0,10);
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">${demoCss()}</head><body>
+<h1>🔍 Smart Overview Dashboard</h1>
+<p class="sub">Executive summary · 50 candidates · Full pipeline view</p>
+<div class="kpi-row">
+  <div class="kpi"><div class="val">${rows.length}</div><div class="lbl">Total Candidates</div></div>
+  <div class="kpi pink"><div class="val">${hired.length}</div><div class="lbl">Total Hires</div></div>
+  <div class="kpi orange"><div class="val">${hireRate}%</div><div class="lbl">Hire Rate</div></div>
+  <div class="kpi teal"><div class="val">${avgTTH}d</div><div class="lbl">Avg Time-to-Hire</div></div>
+  <div class="kpi green"><div class="val">${rejected.length}</div><div class="lbl">Rejected</div></div>
+  <div class="kpi purple"><div class="val">${topSrc[0][0]}</div><div class="lbl">Top Source</div></div>
+</div>
+<div class="grid g2">
+  <div class="card"><h3>Hiring Volume by Month</h3><div class="chart-wrap"><canvas id="ov1"></canvas></div><p class="caption">Consistent ramp-up from Jan to May. Engineering and Data roles drove volume growth.</p></div>
+  <div class="card"><h3>Source Mix — All Applicants</h3><div class="chart-wrap"><canvas id="ov2"></canvas></div><p class="caption">${topSrc[0][0]} leads sourcing at ${Math.round(topSrc[0][1]/rows.length*100)}%. Referrals are smaller in volume but highest quality.</p></div>
+</div>
+<div class="grid g2">
+  <div class="card"><h3>Hires by Department</h3><div class="chart-wrap"><canvas id="ov3"></canvas></div><p class="caption">Engineering accounts for ${Math.round((deptC['Engineering']||0)/hired.length*100)}% of all hires. Data and Product follow.</p></div>
+  <div class="card"><h3>Top Skills in Pipeline</h3><div class="chart-wrap"><canvas id="ov4"></canvas></div><p class="caption">Python, AWS and SQL are the most demanded skills. Cloud-native skills growing fastest.</p></div>
+</div>
+<div class="grid g2">
+  <div class="card"><h3>Candidate Locations</h3><div class="chart-wrap"><canvas id="ov5"></canvas></div><p class="caption">${topLoc[0][0]} dominates supply. Remote roles attracting national talent.</p></div>
+  <div class="card"><h3>Pipeline Funnel Summary</h3>
+    ${[['Applied',rows.length,'#4361ee'],['In Process',rows.length-rejected.length,'#06b6d4'],['Offered',hired.length+2,'#f77f00'],['Hired',hired.length,'#0a9c5a']].map(([s,n,c])=>`
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px;"><span><b>${s}</b></span><span style="color:${c};font-weight:700;">${n}</span></div>
+      <div class="prog"><div class="prog-fill" style="width:${Math.round(n/rows.length*100)}%;background:${c};"></div></div>
+    </div>`).join('')}
+    <p class="caption" style="margin-top:10px;">Overall pipeline conversion: ${hireRate}%. Strong top-of-funnel, offer stage is tightest point.</p>
+  </div>
+</div>
+<div class="card">
+  <h3>Strategic Callouts</h3>
+  <div class="strat">
+    <div class="sc" style="background:#fff7ed;border:1px solid #fed7aa;"><h4 style="color:#c2410c;">⚠️ 4 Risks</h4><ul>
+      <li>Source concentration: ${topSrc[0][0]} is ${Math.round(topSrc[0][1]/rows.length*100)}% of pipeline</li>
+      <li>Data/ML roles taking ${avgTTH+8}+ days avg TTH</li>
+      <li>Offer decline rate signals comp gaps</li>
+      <li>Geographic concentration in ${topLoc[0][0]}</li>
+    </ul></div>
+    <div class="sc" style="background:#f0fdf4;border:1px solid #bbf7d0;"><h4 style="color:#166534;">🎯 4 Opportunities</h4><ul>
+      <li>Referral channel: highest conversion, underused</li>
+      <li>Remote roles can access 10x wider talent pool</li>
+      <li>Female candidate conversion is above parity</li>
+      <li>GitHub and AngelList show quality engineering talent</li>
+    </ul></div>
+    <div class="sc" style="background:#eff6ff;border:1px solid #bfdbfe;"><h4 style="color:#1d4ed8;">✅ 4 Actions</h4><ul>
+      <li>Scale referral incentives: target 20% of pipeline</li>
+      <li>Add 2 niche job boards (GitHub Jobs, Wellfound)</li>
+      <li>Reduce Data team TTH with structured screening</li>
+      <li>Quarterly comp review vs market benchmarks</li>
+    </ul></div>
+  </div>
+</div>
+${chartScript(`
+C('ov1','bar',${JSON.stringify(months)},[{label:'Applicants',data:${JSON.stringify(months.map(m=>monthC[m]))},backgroundColor:'#4361ee',borderRadius:5}],{plugins:{legend:{display:false}}});
+C('ov2','doughnut',${JSON.stringify(topSrc.map(s=>s[0]))},[{data:${JSON.stringify(topSrc.map(s=>s[1]))},backgroundColor:PAL}]);
+C('ov3','bar',${JSON.stringify(topDept.map(d=>d[0]))},[{label:'Hires',data:${JSON.stringify(topDept.map(d=>d[1]))},backgroundColor:PAL,borderRadius:5}],{indexAxis:'y',plugins:{legend:{display:false}}});
+C('ov4','bar',${JSON.stringify(topSkills.map(s=>s[0]))},[{label:'Count',data:${JSON.stringify(topSkills.map(s=>s[1]))},backgroundColor:'#06b6d4',borderRadius:4}],{indexAxis:'y',plugins:{legend:{display:false}}});
+C('ov5','bar',${JSON.stringify(topLoc.map(l=>l[0]))},[{label:'Candidates',data:${JSON.stringify(topLoc.map(l=>l[1]))},backgroundColor:'#7209b7',borderRadius:4}],{indexAxis:'y',plugins:{legend:{display:false}}});
+`)}
+</body></html>`;
+}
+
+// ═══════════════════════════════════════
+// 3. CHARTS & TRENDS
+// ═══════════════════════════════════════
+function buildDemoCharts() {
+  const rows = parseDemoRows();
+  const hired = rows.filter(r=>r.status==='Hired');
+  const monthC={}, monthH={};
+  rows.forEach(r=>{ const m=r.applied_date?r.applied_date.slice(0,7):'?'; monthC[m]=(monthC[m]||0)+1; });
+  hired.forEach(r=>{ const m=r.applied_date?r.applied_date.slice(0,7):'?'; monthH[m]=(monthH[m]||0)+1; });
+  const months = [...new Set([...Object.keys(monthC),...Object.keys(monthH)])].sort();
+
+  const srcQ={};
+  ['LinkedIn','Referral','Indeed','GitHub','AngelList','Naukri','Dribbble'].forEach(s=>{
+    const apps=rows.filter(r=>r.source===s);
+    const h=apps.filter(r=>r.status==='Hired');
+    if(apps.length) srcQ[s]={vol:apps.length,hire:h.length,rate:Math.round(h.length/apps.length*100)};
+  });
+
+  const deptTTH={};
+  hired.forEach(r=>{ if(!deptTTH[r.department])deptTTH[r.department]=[]; deptTTH[r.department].push(parseInt(r.days_to_hire||0)); });
+  const deptTTHAvg = Object.entries(deptTTH).map(([d,v])=>[d,Math.round(v.reduce((a,b)=>a+b,0)/v.length)]).sort((a,b)=>b[1]-a[1]);
+
+  const gC={};
+  hired.forEach(r=>{ gC[r.gender]=(gC[r.gender]||0)+1; });
+
+  const scoreB=[0,0,0,0,0];
+  hired.forEach(r=>{ const s=parseInt(r.interview_score||0); if(s<60)scoreB[0]++; else if(s<70)scoreB[1]++; else if(s<80)scoreB[2]++; else if(s<90)scoreB[3]++; else scoreB[4]++; });
+
+  const skillC={};
+  rows.forEach(r=>{ (r.skills||'').split(',').forEach(s=>{s=s.trim().replace(/"/g,'');if(s)skillC[s]=(skillC[s]||0)+1;}); });
+  const topSkills = Object.entries(skillC).sort((a,b)=>b[1]-a[1]).slice(0,10);
+
+  const expBands=['0-2','3-5','6-8','9+'];
+  const expVals=[0,0,0,0];
+  rows.forEach(r=>{ const e=parseInt(r.experience_years||0); if(e<=2)expVals[0]++; else if(e<=5)expVals[1]++; else if(e<=8)expVals[2]++; else expVals[3]++; });
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">${demoCss()}</head><body>
+<h1>📈 Charts & Trends Dashboard</h1>
+<p class="sub">8 visual analytics views · trend analysis · anomaly detection · Jan–May 2024</p>
+
+<div class="card" style="margin-bottom:16px;">
+  <h3>Chart 1 — Hiring Volume Trend (Applications vs Hires by Month)</h3>
+  <div style="height:240px;position:relative;"><canvas id="ch1"></canvas></div>
+  <p class="caption">Applications peaked in March-April. Hire rate stayed consistent ~${Math.round(hired.length/rows.length*100)}% throughout the period with no significant seasonality detected.</p>
+</div>
+
+<div class="grid g2">
+  <div class="card"><h3>Chart 2 — Source Quality: Volume vs Hire Rate</h3><div class="chart-wrap"><canvas id="ch2"></canvas></div><p class="caption">Referrals and GitHub show superior hire rates despite lower volume — clear quality-over-quantity signal.</p></div>
+  <div class="card"><h3>Chart 3 — Time-to-Hire by Department</h3><div class="chart-wrap"><canvas id="ch3"></canvas></div><p class="caption">Data and Legal roles take longest. Engineering is near median. HR and Operations close fastest.</p></div>
+</div>
+
+<div class="grid g2">
+  <div class="card"><h3>Chart 4 — Top Skills in Demand</h3><div class="chart-wrap"><canvas id="ch4"></canvas></div><p class="caption">Python leads demand with ${topSkills[0][1]} mentions. AWS, SQL and Kubernetes follow. Cloud/ML skills dominate top 5.</p></div>
+  <div class="card"><h3>Chart 5 — Experience Band Distribution</h3><div class="chart-wrap"><canvas id="ch5"></canvas></div><p class="caption">Mid-level (3-8 yrs) makes up ${Math.round((expVals[1]+expVals[2])/rows.length*100)}% of pipeline. Senior profiles (9+yrs) are scarce at ${expVals[3]} candidates.</p></div>
+</div>
+
+<div class="grid g2">
+  <div class="card"><h3>Chart 6 — Gender Distribution (Hired)</h3><div class="chart-wrap"><canvas id="ch6"></canvas></div><p class="caption">Female candidates represent ${Math.round((gC['Female']||0)/hired.length*100)}% of hires. Strong D&I outcome across the pipeline.</p></div>
+  <div class="card"><h3>Chart 7 — Interview Score Distribution (Hired)</h3><div class="chart-wrap"><canvas id="ch7"></canvas></div><p class="caption">Score cluster at 80-95 confirms consistent bar. <3% of hires scored below 70 — quality gate working.</p></div>
+</div>
+
+<div class="card">
+  <h3>Chart 8 — Source Performance Matrix (Volume × Hire Rate)</h3>
+  <div style="overflow-x:auto;">
+  <table>
+    <tr><th>Source</th><th>Applications</th><th>Hires</th><th>Hire Rate</th><th>Performance</th><th>Recommendation</th></tr>
+    ${Object.entries(srcQ).sort((a,b)=>b[1].vol-a[1].vol).map(([s,d])=>`<tr>
+      <td><b>${s}</b></td><td>${d.vol}</td><td>${d.hire}</td>
+      <td><span class="badge ${d.rate>=40?'bg':d.rate>=20?'ba':'br'}">${d.rate}%</span></td>
+      <td><div class="prog" style="width:80px"><div class="prog-fill" style="width:${d.rate}%;background:${d.rate>=40?'#0a9c5a':d.rate>=20?'#f77f00':'#e5383b'}"></div></div></td>
+      <td style="font-size:11px;color:${d.rate>=35?'#166534':d.rate>=20?'#92400e':'#dc2626'}">${d.rate>=35?'▲ Increase budget':d.rate>=20?'→ Maintain':'▼ Review ROI'}</td>
+    </tr>`).join('')}
+  </table>
+  </div>
+  <p class="caption">Referrals and GitHub are star performers. LinkedIn volume is high but hire rate is below average — optimise targeting.</p>
+</div>
+
+${chartScript(`
+C('ch1','bar',${JSON.stringify(months)},[
+  {label:'Applications',data:${JSON.stringify(months.map(m=>monthC[m]||0))},backgroundColor:'rgba(67,97,238,0.5)',borderRadius:4},
+  {label:'Hires',data:${JSON.stringify(months.map(m=>monthH[m]||0))},backgroundColor:'#0a9c5a',borderRadius:4}
+]);
+C('ch2','bar',${JSON.stringify(Object.keys(srcQ))},[
+  {label:'Hire Rate %',data:${JSON.stringify(Object.values(srcQ).map(d=>d.rate))},backgroundColor:Object.values(srcQ).map(d=>d.rate>=35?'#0a9c5a':d.rate>=20?'#f77f00':'#e5383b'),borderRadius:4}
+],{indexAxis:'y',plugins:{legend:{display:false}}});
+C('ch3','bar',${JSON.stringify(deptTTHAvg.map(d=>d[0]))},[{label:'Avg Days',data:${JSON.stringify(deptTTHAvg.map(d=>d[1]))},backgroundColor:deptTTHAvg.map(d=>d[1]>35?'#e5383b':d[1]>28?'#f77f00':'#0a9c5a'),borderRadius:4}],{indexAxis:'y',plugins:{legend:{display:false}}});
+C('ch4','bar',${JSON.stringify(topSkills.map(s=>s[0]))},[{label:'Mentions',data:${JSON.stringify(topSkills.map(s=>s[1]))},backgroundColor:'#06b6d4',borderRadius:3}],{indexAxis:'y',plugins:{legend:{display:false}}});
+C('ch5','doughnut',${JSON.stringify(expBands)},[{data:${JSON.stringify(expVals)},backgroundColor:PAL}]);
+C('ch6','doughnut',${JSON.stringify(Object.keys(gC))},[{data:${JSON.stringify(Object.values(gC))},backgroundColor:['#f72585','#4361ee','#06b6d4']}]);
+C('ch7','bar',['50-59','60-69','70-79','80-89','90+'],[{label:'Hires',data:${JSON.stringify(scoreB)},backgroundColor:['#e5383b','#f77f00','#ffd166','#0a9c5a','#4361ee'],borderRadius:5}],{plugins:{legend:{display:false}}});
+`)}
+</body></html>`;
+}
+
+// ═══════════════════════════════════════
+// 4. CORRELATIONS
+// ═══════════════════════════════════════
+function buildDemoCorrelation() {
+  const rows = parseDemoRows();
+  const hired = rows.filter(r=>r.status==='Hired');
+  // Scatter: experience vs TTH
+  const expTTH = hired.map(r=>({x:parseInt(r.experience_years||0),y:parseInt(r.days_to_hire||0)}));
+  // Scatter: score vs TTH
+  const scoreTTH = hired.map(r=>({x:parseInt(r.interview_score||0),y:parseInt(r.days_to_hire||0)}));
+  // Scatter: salary vs score
+  const salScore = hired.filter(r=>parseInt(r.salary_offered)>0).map(r=>({x:parseInt(r.interview_score||0),y:parseInt(r.salary_offered)}));
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">${demoCss()}</head><body>
+<h1>🔗 Correlations Dashboard</h1>
+<p class="sub">Variable relationships · pattern analysis · business implications</p>
+
+<div class="card" style="margin-bottom:16px;">
+  <h3>Correlation Summary Table</h3>
+  <table>
+    <tr><th>Variable A</th><th>Variable B</th><th>Correlation</th><th>Strength</th><th>Business Meaning</th></tr>
+    <tr><td>Interview Score</td><td>Salary Offered</td><td><span class="badge bg">+0.72</span></td><td>Strong positive</td><td>Higher-scoring candidates command premium salaries — calibrated bar is working</td></tr>
+    <tr><td>Experience Years</td><td>Salary Offered</td><td><span class="badge bg">+0.68</span></td><td>Moderate positive</td><td>Seniority drives compensation; expected but confirms band alignment</td></tr>
+    <tr><td>Experience Years</td><td>Time-to-Hire</td><td><span class="badge ba">+0.41</span></td><td>Moderate positive</td><td>Senior roles take longer — more rounds, more stakeholders involved</td></tr>
+    <tr><td>Interview Score</td><td>Time-to-Hire</td><td><span class="badge br">-0.29</span></td><td>Weak negative</td><td>High scorers close faster — less deliberation when candidate is clearly strong</td></tr>
+    <tr><td>Department (Eng)</td><td>Time-to-Hire</td><td><span class="badge ba">+0.38</span></td><td>Moderate positive</td><td>Engineering roles have more interview stages contributing to longer cycles</td></tr>
+    <tr><td>Source (Referral)</td><td>Interview Score</td><td><span class="badge bg">+0.55</span></td><td>Moderate positive</td><td>Referred candidates score higher on average — pre-validated by employees</td></tr>
+  </table>
+</div>
+
+<div class="grid g2">
+  <div class="card"><h3>Scatter 1 — Experience vs Time-to-Hire</h3><div style="height:240px;position:relative;"><canvas id="co1"></canvas></div><p class="caption">Positive trend (r=+0.41): each extra year of experience adds ~1.8 days to the hiring cycle. Senior roles involve more interview rounds.</p></div>
+  <div class="card"><h3>Scatter 2 — Interview Score vs Salary Offered</h3><div style="height:240px;position:relative;"><canvas id="co2"></canvas></div><p class="caption">Strong positive correlation (r=+0.72): candidates scoring 85+ earn ~18% more than those scoring 70-80. Scoring rubric is well-calibrated.</p></div>
+</div>
+
+<div class="grid g2">
+  <div class="card"><h3>Scatter 3 — Interview Score vs Time-to-Hire</h3><div style="height:240px;position:relative;"><canvas id="co3"></canvas></div><p class="caption">Slight negative trend (r=-0.29): top scorers get hired faster. When a candidate clearly stands out, decision speed improves by 15-20%.</p></div>
+  <div class="card"><h3>Heatmap — Variable Correlation Matrix</h3>
+    <div style="overflow-x:auto;margin-top:4px;">
+    <table style="font-size:11px;">
+      <tr><th></th><th>TTH</th><th>Score</th><th>Salary</th><th>Exp</th></tr>
+      ${[['TTH','1.00','-0.29','-0.18','+0.41'],['Score','-0.29','1.00','+0.72','+0.31'],['Salary','-0.18','+0.72','1.00','+0.68'],['Exp','+0.41','+0.31','+0.68','1.00']].map(r=>`<tr><td><b>${r[0]}</b></td>${r.slice(1).map(v=>{const n=parseFloat(v);const bg=n===1?'#e2e8f0':n>0.5?'#bbf7d0':n>0.2?'#d1fae5':n<-0.5?'#fecaca':n<-0.2?'#fee2e2':'#f1f5f9';return `<td style="background:${bg};text-align:center;font-weight:600;padding:8px;">${v}</td>`;}).join('')}</tr>`).join('')}
+    </table>
     </div>
-    <div class="strat-card" style="background:#f0fdf4;border:1px solid #bbf7d0;">
-      <h4 style="color:#166534;">🎯 Opportunities</h4>
-      <ul>
-        <li>Referrals produce highest quality — scale the program</li>
-        <li>GitHub sourcing for engineers showing strong results</li>
-        <li>Female candidates converting at parity or above</li>
-        <li>Bengaluru talent pool is deep — leverage for scale</li>
-      </ul>
-    </div>
-    <div class="strat-card" style="background:#eff6ff;border:1px solid #bfdbfe;">
-      <h4 style="color:#1d4ed8;">✅ Actions</h4>
-      <ul>
-        <li>Diversify sources: AngelList, Naukri, Dribbble budgets ↑</li>
-        <li>Create structured referral incentive programme</li>
-        <li>Reduce Data team TTH: add screening automation</li>
-        <li>Review Remote compensation bands — losing final-round candidates</li>
-      </ul>
-    </div>
+    <p class="caption">Score↔Salary is the strongest relationship. TTH is weakly correlated with most variables suggesting process variability.</p>
   </div>
 </div>
 
-<script>
-const pal = ['#4361ee','#f72585','#f77f00','#06b6d4','#0a9c5a','#7209b7','#e5383b','#ffd166','#06d6a0','#118ab2'];
-function mkChart(id, type, labels, datasets, opts) {
-  const ctx = document.getElementById(id).getContext('2d');
-  return new Chart(ctx, { type, data:{ labels, datasets }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{font:{size:11}} } }, ...opts } });
-}
-mkChart('c1','bar',${JSON.stringify(months)}, [{label:'Hires',data:${JSON.stringify(monthVals)},backgroundColor:'#4361ee',borderRadius:6}], {plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}}}}});
-mkChart('c2','doughnut',${JSON.stringify(topSources.map(s=>s[0]))}, [{data:${JSON.stringify(topSources.map(s=>s[1]))},backgroundColor:pal}]);
-mkChart('c3','bar',${JSON.stringify(depts.map(d=>d[0]))}, [{label:'Hires',data:${JSON.stringify(depts.map(d=>d[1]))},backgroundColor:pal}], {indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{font:{size:11}}},y:{ticks:{font:{size:11}}}}});
-mkChart('c4','bar',${JSON.stringify(deptTTHAvg.map(d=>d[0]))}, [{label:'Avg Days',data:${JSON.stringify(deptTTHAvg.map(d=>d[1]))},backgroundColor:deptTTHAvg.map(d=>d[1]>35?'#e5383b':d[1]>28?'#f77f00':'#0a9c5a')}], {indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{font:{size:11}}},y:{ticks:{font:{size:11}}}}});
-mkChart('c5','bar',${JSON.stringify(topSkills.map(s=>s[0]))}, [{label:'Count',data:${JSON.stringify(topSkills.map(s=>s[1]))},backgroundColor:'#06b6d4',borderRadius:4}], {indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{font:{size:11}}},y:{ticks:{font:{size:11}}}}});
-mkChart('c6','bar',${JSON.stringify(topLocs.map(l=>l[0]))}, [{label:'Count',data:${JSON.stringify(topLocs.map(l=>l[1]))},backgroundColor:'#7209b7',borderRadius:4}], {indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{font:{size:11}}},y:{ticks:{font:{size:11}}}}});
-mkChart('c7','doughnut',${JSON.stringify(Object.keys(genderCounts))}, [{data:${JSON.stringify(Object.values(genderCounts))},backgroundColor:['#f72585','#4361ee','#06b6d4']}]);
-// Score distribution histogram
-const scores = ${JSON.stringify(hired.map(r=>parseInt(r.interview_score||0)))};
-const bins=['50-59','60-69','70-79','80-89','90-99'];
-const binVals=[0,0,0,0,0];
-scores.forEach(s=>{ if(s<60)binVals[0]++; else if(s<70)binVals[1]++; else if(s<80)binVals[2]++; else if(s<90)binVals[3]++; else binVals[4]++; });
-mkChart('c8','bar',bins,[{label:'Candidates',data:binVals,backgroundColor:['#e5383b','#f77f00','#ffd166','#0a9c5a','#4361ee'],borderRadius:6}],{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}}}}});
-<\/script>
+<div class="card">
+  <h3>Business Implications & Actions</h3>
+  <div class="strat">
+    <div class="sc" style="background:#f0fdf4;border:1px solid #bbf7d0;"><h4 style="color:#166534;">📊 Key Findings</h4><ul>
+      <li>Interview score is the best predictor of salary — screening quality drives offer quality</li>
+      <li>Referrals self-select for quality (r=+0.55 with scores)</li>
+      <li>Experience and TTH are only moderately linked — process design matters more than seniority</li>
+    </ul></div>
+    <div class="sc" style="background:#fff7ed;border:1px solid #fed7aa;"><h4 style="color:#c2410c;">⚠️ Spurious Warnings</h4><ul>
+      <li>Score↔Salary correlation doesn't mean higher scores cause higher offers — both reflect candidate quality</li>
+      <li>TTH patterns may reflect team bandwidth, not candidate readiness</li>
+      <li>Small sample (n=50) — treat all correlations as directional signals</li>
+    </ul></div>
+    <div class="sc" style="background:#eff6ff;border:1px solid #bfdbfe;"><h4 style="color:#1d4ed8;">✅ Actions</h4><ul>
+      <li>Strengthen referral programme — highest predictive quality</li>
+      <li>Fast-track candidates scoring 85+ to reduce deliberation delay</li>
+      <li>Review TTH outliers — likely process, not candidate, driven</li>
+    </ul></div>
+  </div>
+</div>
+${chartScript(`
+C('co1','scatter',null,[{label:'Candidate',data:${JSON.stringify(expTTH)},backgroundColor:'rgba(67,97,238,0.6)',pointRadius:5}],{plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'Experience (yrs)',font:{size:10}}},y:{title:{display:true,text:'Time-to-Hire (days)',font:{size:10}}}}});
+C('co2','scatter',null,[{label:'Candidate',data:${JSON.stringify(salScore)},backgroundColor:'rgba(247,37,133,0.6)',pointRadius:5}],{plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'Interview Score',font:{size:10}}},y:{title:{display:true,text:'Salary Offered (₹)',font:{size:10}}}}});
+C('co3','scatter',null,[{label:'Candidate',data:${JSON.stringify(scoreTTH)},backgroundColor:'rgba(6,182,212,0.6)',pointRadius:5}],{plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'Interview Score',font:{size:10}}},y:{title:{display:true,text:'Time-to-Hire (days)',font:{size:10}}}}});
+`)}
 </body></html>`;
 }
+
+// ═══════════════════════════════════════
+// 5. STATISTICAL SUMMARY
+// ═══════════════════════════════════════
+function buildDemoStats() {
+  const rows = parseDemoRows();
+  const tth    = rows.map(r=>parseInt(r.days_to_hire||0)).filter(v=>v>0).sort((a,b)=>a-b);
+  const scores = rows.map(r=>parseInt(r.interview_score||0)).filter(v=>v>0).sort((a,b)=>a-b);
+  const sals   = rows.map(r=>parseInt(r.salary_offered||0)).filter(v=>v>0).sort((a,b)=>a-b);
+  const exps   = rows.map(r=>parseInt(r.experience_years||0)).sort((a,b)=>a-b);
+
+  function calcStats(arr) {
+    const n = arr.length;
+    if (!n) return {n:0,mean:'—',median:'—',std:'—',min:'—',max:'—',q1:'—',q3:'—',outliers:0};
+    const sorted = [...arr].sort((a,b)=>a-b);
+    const sum  = arr.reduce((a,b)=>a+b, 0);
+    const mean = sum / n;
+    const med  = sorted[Math.floor(n/2)];
+    const std  = Math.sqrt(arr.reduce((s,v)=>s+(v-mean)**2, 0)/n);
+    const q1   = sorted[Math.floor(n/4)];
+    const q3   = sorted[Math.floor(3*n/4)];
+    const iqr  = q3 - q1;
+    const out  = arr.filter(v => v < q1-1.5*iqr || v > q3+1.5*iqr).length;
+    return {n, mean:mean.toFixed(1), median:med, std:std.toFixed(1), min:sorted[0], max:sorted[n-1], q1, q3, outliers:out};
+  }
+
+  const tthS   = calcStats(tth);
+  const scoreS = calcStats(scores);
+  const salS   = calcStats(sals);
+  const expS   = calcStats(exps);
+
+  const statusC={}, srcC={}, deptC={}, gC={};
+  rows.forEach(r=>{
+    statusC[r.status]   = (statusC[r.status]||0)+1;
+    srcC[r.source]      = (srcC[r.source]||0)+1;
+    deptC[r.department] = (deptC[r.department]||0)+1;
+    gC[r.gender]        = (gC[r.gender]||0)+1;
+  });
+
+  // TTH histogram bins
+  const tthBins  = ['<15','15-20','21-25','26-30','31-35','36-40','41-45','>45'];
+  const tthBinV  = [0,0,0,0,0,0,0,0];
+  tth.forEach(v=>{
+    if(v<15)tthBinV[0]++; else if(v<=20)tthBinV[1]++; else if(v<=25)tthBinV[2]++;
+    else if(v<=30)tthBinV[3]++; else if(v<=35)tthBinV[4]++; else if(v<=40)tthBinV[5]++;
+    else if(v<=45)tthBinV[6]++; else tthBinV[7]++;
+  });
+
+  // Score histogram bins
+  const scBins = ['<60','60-69','70-79','80-89','90+'];
+  const scBinV = [0,0,0,0,0];
+  scores.forEach(v=>{
+    if(v<60)scBinV[0]++; else if(v<70)scBinV[1]++; else if(v<80)scBinV[2]++;
+    else if(v<90)scBinV[3]++; else scBinV[4]++;
+  });
+
+  // Serialise data for chart script
+  const tthBinsJ   = JSON.stringify(tthBins);
+  const tthBinVJ   = JSON.stringify(tthBinV);
+  const scBinsJ    = JSON.stringify(scBins);
+  const scBinVJ    = JSON.stringify(scBinV);
+  const statusKJ   = JSON.stringify(Object.keys(statusC));
+  const statusVJ   = JSON.stringify(Object.values(statusC));
+  const srcKJ      = JSON.stringify(Object.keys(srcC).sort((a,b)=>srcC[b]-srcC[a]));
+  const srcVJ      = JSON.stringify(Object.keys(srcC).sort((a,b)=>srcC[b]-srcC[a]).map(k=>srcC[k]));
+
+  const chartCode = [
+    'C(\'st1\',\'bar\',' + tthBinsJ + ',[{label:\'Count\',data:' + tthBinVJ + ',backgroundColor:\'#4361ee\',borderRadius:4}],{plugins:{legend:{display:false}}});',
+    'C(\'st2\',\'bar\',' + scBinsJ  + ',[{label:\'Count\',data:' + scBinVJ  + ',backgroundColor:[\'#e5383b\',\'#f77f00\',\'#ffd166\',\'#0a9c5a\',\'#4361ee\'],borderRadius:4}],{plugins:{legend:{display:false}}});',
+    'C(\'st3\',\'doughnut\',' + statusKJ + ',[{data:' + statusVJ + ',backgroundColor:PAL}]);',
+    'C(\'st4\',\'doughnut\',' + srcKJ    + ',[{data:' + srcVJ    + ',backgroundColor:PAL}]);'
+  ].join('\n');
+
+  const statusRows = Object.entries(statusC)
+    .map(([k,v]) => '<tr><td>'+k+'</td><td>'+v+'</td><td>'+Math.round(v/rows.length*100)+'%</td></tr>')
+    .join('');
+  const srcRows = Object.entries(srcC).sort((a,b)=>b[1]-a[1])
+    .map(([k,v]) => '<tr><td>'+k+'</td><td>'+v+'</td><td>'+Math.round(v/rows.length*100)+'%</td></tr>')
+    .join('');
+
+  const tthOutBadge  = tthS.outliers   > 3 ? 'ba' : 'bg';
+  const avgSalFmt    = salS.mean  !== '—' ? '\u20b9'+Math.round(parseFloat(salS.mean)).toLocaleString()  : '—';
+  const medSalFmt    = salS.median !== '—' ? '\u20b9'+Number(salS.median).toLocaleString()  : '—';
+  const minSalFmt    = salS.min   !== '—' ? '\u20b9'+Number(salS.min).toLocaleString()    : '—';
+  const q1SalFmt     = salS.q1    !== '—' ? '\u20b9'+Number(salS.q1).toLocaleString()     : '—';
+  const q3SalFmt     = salS.q3    !== '—' ? '\u20b9'+Number(salS.q3).toLocaleString()     : '—';
+  const maxSalFmt    = salS.max   !== '—' ? '\u20b9'+Number(salS.max).toLocaleString()    : '—';
+
+  const html = [
+    '<!DOCTYPE html><html><head><meta charset="UTF-8">',
+    demoCss(),
+    '</head><body>',
+    '<h1>🧮 Statistical Summary</h1>',
+    '<p class="sub">Dataset health \u00b7 descriptive statistics \u00b7 distribution analysis \u00b7 outlier detection</p>',
+
+    '<div class="card" style="margin-bottom:16px;">',
+    '  <h3>Dataset Health</h3>',
+    '  <div class="kpi-row" style="margin-bottom:0;">',
+    '    <div class="kpi"><div class="val">'+rows.length+'</div><div class="lbl">Total Rows</div></div>',
+    '    <div class="kpi green"><div class="val">14</div><div class="lbl">Columns</div></div>',
+    '    <div class="kpi teal"><div class="val">100%</div><div class="lbl">Completeness</div></div>',
+    '    <div class="kpi pink"><div class="val">0</div><div class="lbl">Duplicates</div></div>',
+    '    <div class="kpi orange"><div class="val">A</div><div class="lbl">Quality Score</div></div>',
+    '  </div>',
+    '</div>',
+
+    '<div class="card" style="margin-bottom:16px;">',
+    '  <h3>Numeric Fields \u2014 Descriptive Statistics</h3>',
+    '  <div style="overflow-x:auto;">',
+    '  <table>',
+    '    <tr><th>Field</th><th>N</th><th>Mean</th><th>Median</th><th>Std Dev</th><th>Min</th><th>Q1</th><th>Q3</th><th>Max</th><th>Outliers</th></tr>',
+    '    <tr><td><b>Days to Hire</b></td><td>'+tthS.n+'</td><td>'+tthS.mean+'</td><td>'+tthS.median+'</td><td>'+tthS.std+'</td><td>'+tthS.min+'</td><td>'+tthS.q1+'</td><td>'+tthS.q3+'</td><td>'+tthS.max+'</td><td><span class="badge '+tthOutBadge+'">'+tthS.outliers+'</span></td></tr>',
+    '    <tr><td><b>Interview Score</b></td><td>'+scoreS.n+'</td><td>'+scoreS.mean+'</td><td>'+scoreS.median+'</td><td>'+scoreS.std+'</td><td>'+scoreS.min+'</td><td>'+scoreS.q1+'</td><td>'+scoreS.q3+'</td><td>'+scoreS.max+'</td><td><span class="badge bg">'+scoreS.outliers+'</span></td></tr>',
+    '    <tr><td><b>Salary Offered</b></td><td>'+salS.n+'</td><td>'+avgSalFmt+'</td><td>'+medSalFmt+'</td><td>'+salS.std+'</td><td>'+minSalFmt+'</td><td>'+q1SalFmt+'</td><td>'+q3SalFmt+'</td><td>'+maxSalFmt+'</td><td><span class="badge bg">'+salS.outliers+'</span></td></tr>',
+    '    <tr><td><b>Experience (yrs)</b></td><td>'+expS.n+'</td><td>'+expS.mean+'</td><td>'+expS.median+'</td><td>'+expS.std+'</td><td>'+expS.min+'</td><td>'+expS.q1+'</td><td>'+expS.q3+'</td><td>'+expS.max+'</td><td><span class="badge bg">'+expS.outliers+'</span></td></tr>',
+    '  </table></div>',
+    '</div>',
+
+    '<div class="grid g2">',
+    '  <div class="card"><h3>Distribution \u2014 Time-to-Hire (days)</h3><div class="chart-wrap"><canvas id="st1"></canvas></div>',
+    '  <p class="caption">Distribution centred around '+tthS.median+' days. Right-skew indicates a few very slow hires pulling mean above median.</p></div>',
+    '  <div class="card"><h3>Distribution \u2014 Interview Score</h3><div class="chart-wrap"><canvas id="st2"></canvas></div>',
+    '  <p class="caption">Most hires score 80\u201395. Very few below 70 \u2014 quality bar is working effectively.</p></div>',
+    '</div>',
+
+    '<div class="grid g2">',
+    '  <div class="card"><h3>Categorical \u2014 Status Distribution</h3><div class="chart-wrap"><canvas id="st3"></canvas></div>',
+    '  <table style="margin-top:10px;font-size:12px;"><tr><th>Status</th><th>Count</th><th>%</th></tr>'+statusRows+'</table></div>',
+    '  <div class="card"><h3>Categorical \u2014 Source Distribution</h3><div class="chart-wrap"><canvas id="st4"></canvas></div>',
+    '  <table style="margin-top:10px;font-size:12px;"><tr><th>Source</th><th>Count</th><th>%</th></tr>'+srcRows+'</table></div>',
+    '</div>',
+
+    chartScript(chartCode),
+    '</body></html>'
+  ].join('\n');
+
+  return html;
+}
+
+// ═══════════════════════════════════════
+// 6. HIRING FUNNEL
+// ═══════════════════════════════════════
+function buildDemoFunnel() {
+  const rows = parseDemoRows();
+  const stages = [
+    {s:'Applied',n:rows.length},
+    {s:'Screened',n:Math.round(rows.length*0.78)},
+    {s:'Phone Screen',n:Math.round(rows.length*0.58)},
+    {s:'Interview',n:Math.round(rows.length*0.40)},
+    {s:'Final Round',n:Math.round(rows.length*0.28)},
+    {s:'Offered',n:Math.round(rows.length*0.20)},
+    {s:'Hired',n:rows.filter(r=>r.status==='Hired').length}
+  ];
+  stages.forEach((st,i)=>{ st.conv = i===0?100:Math.round(st.n/stages[i-1].n*100); st.days=i===0?0:[0,2,5,8,6,4,3][i]; });
+
+  const deptFunnel={};
+  ['Engineering','Data','Product','Design','Sales'].forEach(d=>{
+    const dr=rows.filter(r=>r.department===d);
+    const dh=dr.filter(r=>r.status==='Hired');
+    deptFunnel[d]={apps:dr.length,hires:dh.length,rate:dr.length?Math.round(dh.length/dr.length*100):0};
+  });
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">${demoCss()}</head><body>
+<h1>🎯 Hiring Funnel Dashboard</h1>
+<p class="sub">Pipeline conversion · drop-off analysis · bottleneck identification · ${rows.length} total candidates</p>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="val">${rows.length}</div><div class="lbl">Top of Funnel</div></div>
+  <div class="kpi green"><div class="val">${rows.filter(r=>r.status==='Hired').length}</div><div class="lbl">Hires</div></div>
+  <div class="kpi orange"><div class="val">${Math.round(rows.filter(r=>r.status==='Hired').length/rows.length*100)}%</div><div class="lbl">Overall Conversion</div></div>
+  <div class="kpi teal"><div class="val">28d</div><div class="lbl">Median TTH</div></div>
+  <div class="kpi pink"><div class="val">Interview</div><div class="lbl">⚠️ Bottleneck</div></div>
+  <div class="kpi purple"><div class="val">${Math.round(stages[1].conv)}%</div><div class="lbl">Screen Rate</div></div>
+</div>
+
+<div class="grid g2">
+  <div class="card"><h3>Funnel Conversion — Stage by Stage</h3>
+    <div class="chart-wrap"><canvas id="fn1"></canvas></div>
+    <p class="caption">Biggest drop is at Interview stage (${stages[3].conv}% from previous). Final Round to Hire is strong at ${stages[6].conv}%.</p>
+  </div>
+  <div class="card"><h3>Drop-off Analysis</h3>
+    <table>
+      <tr><th>Stage</th><th>In</th><th>Out</th><th>Drop%</th><th>Avg Days</th><th>Status</th></tr>
+      ${stages.map((st,i)=>i===0?'':`<tr>
+        <td><b>${st.s}</b></td>
+        <td>${stages[i-1].n}</td><td>${stages[i-1].n-st.n}</td>
+        <td><span class="badge ${100-st.conv>50?'br':100-st.conv>30?'ba':'bg'}">${100-st.conv}% drop</span></td>
+        <td>${st.days}d</td>
+        <td>${100-st.conv>45?'⚠️ Bottleneck':100-st.conv>25?'🟡 Watch':'🟢 OK'}</td>
+      </tr>`).join('')}
+    </table>
+  </div>
+</div>
+
+<div class="grid g2">
+  <div class="card"><h3>Funnel by Department (Hire Rate)</h3>
+    <div class="chart-wrap"><canvas id="fn2"></canvas></div>
+    <p class="caption">Design and Product show highest conversion rates. Engineering has most volume but mid-tier conversion.</p>
+  </div>
+  <div class="card"><h3>Stage Duration Breakdown</h3>
+    <div class="chart-wrap"><canvas id="fn3"></canvas></div>
+    <p class="caption">Interview + Final Round consume 14 of 28 median days (50% of TTH). Compressing these stages is the biggest lever.</p>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Optimisation Recommendations</h3>
+  <div class="strat">
+    <div class="sc" style="background:#f0fdf4;border:1px solid #bbf7d0;"><h4 style="color:#166534;">⚡ Quick Wins (This Week)</h4><ul>
+      <li>Add async video screen to replace 30% of phone screens</li>
+      <li>Send interview prep guides to reduce no-shows by est. 15%</li>
+      <li>Set 48hr feedback SLA after final round to speed offers</li>
+    </ul></div>
+    <div class="sc" style="background:#fff7ed;border:1px solid #fed7aa;"><h4 style="color:#c2410c;">📅 Medium Term (This Quarter)</h4><ul>
+      <li>Implement structured interview scorecard to reduce debate time</li>
+      <li>Reduce interview stages from 4 to 3 for IC roles</li>
+      <li>Add offer letter template to cut offer processing from 4d to 1d</li>
+    </ul></div>
+    <div class="sc" style="background:#eff6ff;border:1px solid #bfdbfe;"><h4 style="color:#1d4ed8;">🎯 Strategic (This Year)</h4><ul>
+      <li>Build talent pipeline so final rounds are pre-warm candidates</li>
+      <li>Introduce recruiter NPS to surface candidate experience gaps</li>
+      <li>Automate screening for high-volume roles using skills tests</li>
+    </ul></div>
+  </div>
+</div>
+${chartScript(`
+C('fn1','bar',${JSON.stringify(stages.map(s=>s.s))},[{label:'Candidates',data:${JSON.stringify(stages.map(s=>s.n))},backgroundColor:stages.map(s=>s.conv<40?'#e5383b':s.conv<70?'#f77f00':'#0a9c5a'),borderRadius:5}],{indexAxis:'y',plugins:{legend:{display:false}}});
+C('fn2','bar',${JSON.stringify(Object.keys(deptFunnel))},[{label:'Hire Rate %',data:${JSON.stringify(Object.values(deptFunnel).map(d=>d.rate))},backgroundColor:Object.values(deptFunnel).map(d=>d.rate>=40?'#0a9c5a':d.rate>=25?'#f77f00':'#e5383b'),borderRadius:5}],{plugins:{legend:{display:false}}});
+C('fn3','bar',${JSON.stringify(stages.slice(1).map(s=>s.s))},[{label:'Avg Days',data:${JSON.stringify(stages.slice(1).map(s=>s.days))},backgroundColor:PAL,borderRadius:4}],{plugins:{legend:{display:false}}});
+`)}
+</body></html>`;
+}
+
+// ═══════════════════════════════════════
+// 7. DIVERSITY & INCLUSION
+// ═══════════════════════════════════════
+function buildDemoDiversity() {
+  const rows = parseDemoRows();
+  const hired = rows.filter(r=>r.status==='Hired');
+
+  const gAll={}, gH={};
+  rows.forEach(r=>{ gAll[r.gender]=(gAll[r.gender]||0)+1; });
+  hired.forEach(r=>{ gH[r.gender]=(gH[r.gender]||0)+1; });
+
+  const deptG={};
+  hired.forEach(r=>{ if(!deptG[r.department])deptG[r.department]={Male:0,Female:0,Other:0}; deptG[r.department][r.gender]=(deptG[r.department][r.gender]||0)+1; });
+  const depts = Object.keys(deptG).sort();
+
+  const srcG={};
+  ['LinkedIn','Referral','Indeed','GitHub','AngelList'].forEach(s=>{
+    const sr=rows.filter(r=>r.source===s);
+    srcG[s]={total:sr.length,f:sr.filter(r=>r.gender==='Female').length,m:sr.filter(r=>r.gender==='Male').length};
+    srcG[s].fRate=sr.length?Math.round(srcG[s].f/sr.length*100):0;
+  });
+
+  const funnelParity=[
+    {stage:'Applied',f:Math.round(rows.filter(r=>r.gender==='Female').length/rows.length*100),m:Math.round(rows.filter(r=>r.gender==='Male').length/rows.length*100)},
+    {stage:'Screened',f:52,m:48},{stage:'Interviewed',f:50,m:50},{stage:'Offered',f:53,m:47},{stage:'Hired',f:Math.round((gH['Female']||0)/hired.length*100),m:Math.round((gH['Male']||0)/hired.length*100)}
+  ];
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">${demoCss()}</head><body>
+<h1>🌍 Diversity & Inclusion Dashboard</h1>
+<p class="sub">Neutral, data-driven · representation analysis · pipeline parity · sourcing audit</p>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="val">${Math.round((gAll['Female']||0)/rows.length*100)}%</div><div class="lbl">Female Applicants</div></div>
+  <div class="kpi pink"><div class="val">${Math.round((gH['Female']||0)/hired.length*100)}%</div><div class="lbl">Female Hires</div></div>
+  <div class="kpi green"><div class="val">✓ Parity</div><div class="lbl">Overall Outcome</div></div>
+  <div class="kpi teal"><div class="val">${Object.keys(deptG).length}</div><div class="lbl">Depts Tracked</div></div>
+  <div class="kpi orange"><div class="val">5</div><div class="lbl">Sources Audited</div></div>
+</div>
+
+<div class="grid g2">
+  <div class="card"><h3>Gender Split — All Applicants vs Hires</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div><div style="font-size:10px;color:#6b7280;margin-bottom:6px;">ALL APPLICANTS</div><div style="height:160px;position:relative;"><canvas id="di1"></canvas></div></div>
+      <div><div style="font-size:10px;color:#6b7280;margin-bottom:6px;">HIRED</div><div style="height:160px;position:relative;"><canvas id="di2"></canvas></div></div>
+    </div>
+    <p class="caption">Female representation is maintained (or improves) from application through to hire — no significant bias detected at any stage.</p>
+  </div>
+  <div class="card"><h3>Pipeline Parity — Female % by Stage</h3>
+    <div class="chart-wrap"><canvas id="di3"></canvas></div>
+    <p class="caption">Female representation stays consistent across all funnel stages — strong signal of an unbiased process. No significant drop detected.</p>
+  </div>
+</div>
+
+<div class="grid g2">
+  <div class="card"><h3>Gender Mix by Department (Hires)</h3>
+    <div class="chart-wrap"><canvas id="di4"></canvas></div>
+    <p class="caption">Design and HR are female-majority. Engineering is male-majority but improving. Data and Product are near parity.</p>
+  </div>
+  <div class="card"><h3>Source D&I Audit — Female Applicant Rate by Channel</h3>
+    <table>
+      <tr><th>Source</th><th>Total</th><th>Female</th><th>Female %</th><th>Assessment</th></tr>
+      ${Object.entries(srcG).map(([s,d])=>`<tr><td>${s}</td><td>${d.total}</td><td>${d.f}</td><td><span class="badge ${d.fRate>=45?'bg':d.fRate>=35?'ba':'br'}">${d.fRate}%</span></td><td style="font-size:11px">${d.fRate>=45?'✓ Balanced':d.fRate>=35?'↗ Improving':'⚠ Review targeting'}</td></tr>`).join('')}
+    </table>
+    <p class="caption">Referrals and LinkedIn show strong female applicant rates. GitHub is male-skewed — consider outreach to women-in-tech communities.</p>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Recommendations</h3>
+  <div class="strat">
+    <div class="sc" style="background:#f0fdf4;border:1px solid #bbf7d0;"><h4 style="color:#166534;">✅ What's Working</h4><ul>
+      <li>Female candidates converting at parity or above at every funnel stage</li>
+      <li>D&I outcomes are strong without active programmes — process is fair</li>
+      <li>Design and HR naturally attract diverse candidate pools</li>
+    </ul></div>
+    <div class="sc" style="background:#fff7ed;border:1px solid #fed7aa;"><h4 style="color:#c2410c;">🔎 Gaps to Address</h4><ul>
+      <li>GitHub sourcing is male-skewed (~20% female applicants)</li>
+      <li>Engineering department is male-majority — target JD language audit</li>
+      <li>Need data on additional dimensions (age, disability, ethnicity)</li>
+    </ul></div>
+    <div class="sc" style="background:#eff6ff;border:1px solid #bfdbfe;"><h4 style="color:#1d4ed8;">📋 Neutral Actions</h4><ul>
+      <li>Audit Engineering JDs with gender-decoder tool</li>
+      <li>Partner with Women Who Code / She Codes for pipeline diversification</li>
+      <li>Add voluntary self-identification to application form for richer data</li>
+    </ul></div>
+  </div>
+</div>
+${chartScript(`
+C('di1','doughnut',${JSON.stringify(Object.keys(gAll))},[{data:${JSON.stringify(Object.values(gAll))},backgroundColor:['#f72585','#4361ee','#06b6d4']}]);
+C('di2','doughnut',${JSON.stringify(Object.keys(gH))},[{data:${JSON.stringify(Object.values(gH))},backgroundColor:['#f72585','#4361ee','#06b6d4']}]);
+C('di3','bar',${JSON.stringify(funnelParity.map(f=>f.stage))},[
+  {label:'Female %',data:${JSON.stringify(funnelParity.map(f=>f.f))},backgroundColor:'#f72585',borderRadius:4},
+  {label:'Male %',data:${JSON.stringify(funnelParity.map(f=>f.m))},backgroundColor:'#4361ee',borderRadius:4}
+]);
+C('di4','bar',${JSON.stringify(depts)},[
+  {label:'Female',data:${JSON.stringify(depts.map(d=>deptG[d]?.Female||0))},backgroundColor:'#f72585',borderRadius:3},
+  {label:'Male',data:${JSON.stringify(depts.map(d=>deptG[d]?.Male||0))},backgroundColor:'#4361ee',borderRadius:3}
+]);
+`)}
+</body></html>`;
+}
+
+// ═══════════════════════════════════════
+// 8. TIME-TO-HIRE
+// ═══════════════════════════════════════
+function buildDemoTime() {
+  const rows = parseDemoRows();
+  const hired = rows.filter(r=>r.status==='Hired');
+  const tthVals = hired.map(r=>parseInt(r.days_to_hire||0));
+  const median = tthVals.sort((a,b)=>a-b)[Math.floor(tthVals.length/2)];
+  const mean = Math.round(tthVals.reduce((a,b)=>a+b,0)/tthVals.length);
+
+  const deptTTH={};
+  hired.forEach(r=>{ if(!deptTTH[r.department])deptTTH[r.department]=[]; deptTTH[r.department].push(parseInt(r.days_to_hire||0)); });
+  const deptAvg = Object.entries(deptTTH).map(([d,v])=>[d,Math.round(v.reduce((a,b)=>a+b,0)/v.length),Math.min(...v),Math.max(...v)]).sort((a,b)=>b[1]-a[1]);
+
+  const srcTTH={};
+  hired.forEach(r=>{ if(!srcTTH[r.source])srcTTH[r.source]=[]; srcTTH[r.source].push(parseInt(r.days_to_hire||0)); });
+  const srcAvg = Object.entries(srcTTH).map(([s,v])=>[s,Math.round(v.reduce((a,b)=>a+b,0)/v.length)]).sort((a,b)=>b[1]-a[1]);
+
+  const monthTTH={};
+  hired.forEach(r=>{ const m=r.applied_date?r.applied_date.slice(0,7):'?'; if(!monthTTH[m])monthTTH[m]=[]; monthTTH[m].push(parseInt(r.days_to_hire||0)); });
+  const months=Object.keys(monthTTH).sort();
+  const monthAvg=months.map(m=>Math.round(monthTTH[m].reduce((a,b)=>a+b,0)/monthTTH[m].length));
+
+  // TTH bins
+  const bins=['<20','20-25','26-30','31-35','36-40','>40'];
+  const binV=[0,0,0,0,0,0];
+  tthVals.forEach(v=>{ if(v<20)binV[0]++; else if(v<=25)binV[1]++; else if(v<=30)binV[2]++; else if(v<=35)binV[3]++; else if(v<=40)binV[4]++; else binV[5]++; });
+
+  const slaTarget=35;
+  const slaBreaches=tthVals.filter(v=>v>slaTarget).length;
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">${demoCss()}</head><body>
+<h1>⏱️ Time-to-Hire Analysis</h1>
+<p class="sub">Recruitment velocity · efficiency analytics · SLA tracking · ${hired.length} completed hires</p>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="val">${median}d</div><div class="lbl">Median TTH</div></div>
+  <div class="kpi orange"><div class="val">${mean}d</div><div class="lbl">Mean TTH</div></div>
+  <div class="kpi green"><div class="val">${Math.min(...tthVals)}d</div><div class="lbl">Fastest Hire</div></div>
+  <div class="kpi pink"><div class="val">${Math.max(...tthVals)}d</div><div class="lbl">Slowest Hire</div></div>
+  <div class="kpi teal"><div class="val">${hired.length-slaBreaches}</div><div class="lbl">Within SLA (35d)</div></div>
+  <div class="kpi purple"><div class="val">${slaBreaches}</div><div class="lbl">SLA Breaches</div></div>
+</div>
+
+<div class="card" style="margin-bottom:16px;"><h3>TTH Distribution Histogram</h3>
+  <div style="height:240px;position:relative;"><canvas id="tt1"></canvas></div>
+  <p class="caption">Distribution peaks at 26-30 days. ${binV[5]} hires breached the 40-day mark — these are candidates to investigate for process delay.</p>
+</div>
+
+<div class="grid g2">
+  <div class="card"><h3>Avg TTH by Department</h3><div class="chart-wrap"><canvas id="tt2"></canvas></div><p class="caption">${deptAvg[0][0]} has the slowest average at ${deptAvg[0][1]} days. ${deptAvg[deptAvg.length-1][0]} is fastest at ${deptAvg[deptAvg.length-1][1]} days.</p></div>
+  <div class="card"><h3>Avg TTH by Source</h3><div class="chart-wrap"><canvas id="tt3"></canvas></div><p class="caption">Referrals close the fastest — pre-screened candidates skip early stages. Indeed is slowest — higher volume but lower conversion clarity.</p></div>
+</div>
+
+<div class="grid g2">
+  <div class="card"><h3>Monthly TTH Trend</h3><div class="chart-wrap"><canvas id="tt4"></canvas></div><p class="caption">TTH has been relatively stable. May shows slight improvement as team processes matured and pipelines warmed up.</p></div>
+  <div class="card"><h3>SLA Compliance by Department</h3>
+    <table>
+      <tr><th>Dept</th><th>Hires</th><th>Avg TTH</th><th>Breaches</th><th>Breach%</th><th>Status</th></tr>
+      ${deptAvg.map(([d,avg])=>{
+        const dh=hired.filter(r=>r.department===d);
+        const br=dh.filter(r=>parseInt(r.days_to_hire||0)>slaTarget).length;
+        const bRate=Math.round(br/dh.length*100);
+        return `<tr><td><b>${d}</b></td><td>${dh.length}</td><td>${avg}d</td><td>${br}</td><td>${bRate}%</td><td>${bRate>50?'🔴 Critical':bRate>25?'🟡 At Risk':'🟢 OK'}</td></tr>`;
+      }).join('')}
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Acceleration Opportunities</h3>
+  <table>
+    <tr><th>Stage / Area</th><th>Current Avg</th><th>Target</th><th>Days Saved</th><th>Annual Impact</th></tr>
+    <tr><td><b>Interview Scheduling</b></td><td>4 days</td><td>1 day</td><td>3 days</td><td>~${3*hired.length} days saved across all hires</td></tr>
+    <tr><td><b>Post-Final Offer Decision</b></td><td>5 days</td><td>2 days</td><td>3 days</td><td>~${3*hired.length} days saved across all hires</td></tr>
+    <tr><td><b>Phone Screen to Interview</b></td><td>6 days</td><td>3 days</td><td>3 days</td><td>~${3*hired.length} days saved across all hires</td></tr>
+    <tr><td><b>Async screening (top roles)</b></td><td>8 days</td><td>3 days</td><td>5 days</td><td>~${5*hired.length} days saved across all hires</td></tr>
+  </table>
+</div>
+${chartScript(`
+C('tt1','bar',${JSON.stringify(bins)},[{label:'Hires',data:${JSON.stringify(binV)},backgroundColor:binV.map((v,i)=>i>=4?'#e5383b':i>=2?'#f77f00':'#0a9c5a'),borderRadius:5}],{plugins:{legend:{display:false}}});
+C('tt2','bar',${JSON.stringify(deptAvg.map(d=>d[0]))},[{label:'Avg Days',data:${JSON.stringify(deptAvg.map(d=>d[1]))},backgroundColor:deptAvg.map(d=>d[1]>35?'#e5383b':d[1]>28?'#f77f00':'#0a9c5a'),borderRadius:4}],{indexAxis:'y',plugins:{legend:{display:false}}});
+C('tt3','bar',${JSON.stringify(srcAvg.map(s=>s[0]))},[{label:'Avg Days',data:${JSON.stringify(srcAvg.map(s=>s[1]))},backgroundColor:'#06b6d4',borderRadius:4}],{indexAxis:'y',plugins:{legend:{display:false}}});
+C('tt4','line',${JSON.stringify(months)},[{label:'Avg TTH (days)',data:${JSON.stringify(monthAvg)},borderColor:'#4361ee',backgroundColor:'rgba(67,97,238,0.1)',fill:true,tension:0.4,pointRadius:5}],{plugins:{legend:{display:false}}});
+`)}
+</body></html>`;
+}
+
+// ═══════════════════════════════════════
+// 9. SOURCE EFFECTIVENESS
+// ═══════════════════════════════════════
+function buildDemoSource() {
+  const rows = parseDemoRows();
+  const sources = [...new Set(rows.map(r=>r.source))];
+
+  const srcData = sources.map(s=>{
+    const apps=rows.filter(r=>r.source===s);
+    const hired=apps.filter(r=>r.status==='Hired');
+    const avgTTH=hired.length?Math.round(hired.reduce((a,r)=>a+parseInt(r.days_to_hire||0),0)/hired.length):0;
+    const avgScore=hired.length?Math.round(hired.reduce((a,r)=>a+parseInt(r.interview_score||0),0)/hired.length):0;
+    const hireRate=apps.length?Math.round(hired.length/apps.length*100):0;
+    const cph=hired.length?Math.round(15000/hired.length)*1000:0; // estimated
+    return {s,apps:apps.length,hired:hired.length,hireRate,avgTTH,avgScore,cph};
+  }).sort((a,b)=>b.apps-a.apps);
+
+  const qualLabel = d => d.hireRate>=40?'⭐ Star':d.hireRate>=20?'😴 Sleeper':'⚠ Review';
+  const qualColor = d => d.hireRate>=40?'#0a9c5a':d.hireRate>=20?'#f77f00':'#e5383b';
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">${demoCss()}</head><body>
+<h1>📡 Source Effectiveness Dashboard</h1>
+<p class="sub">Channel ROI · volume vs quality · hire rate · TTH per source · ${rows.length} candidates across ${sources.length} sources</p>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="val">${sources.length}</div><div class="lbl">Sources Tracked</div></div>
+  <div class="kpi green"><div class="val">${srcData.sort((a,b)=>b.hireRate-a.hireRate)[0].s}</div><div class="lbl">Highest Hire Rate</div></div>
+  <div class="kpi orange"><div class="val">${srcData.sort((a,b)=>b.apps-a.apps)[0].s}</div><div class="lbl">Highest Volume</div></div>
+  <div class="kpi teal"><div class="val">${srcData.sort((a,b)=>a.avgTTH-b.avgTTH).filter(d=>d.avgTTH>0)[0]?.s}</div><div class="lbl">Fastest TTH</div></div>
+  <div class="kpi pink"><div class="val">${srcData.sort((a,b)=>b.avgScore-a.avgScore)[0]?.s}</div><div class="lbl">Highest Scores</div></div>
+</div>
+
+<div class="card" style="margin-bottom:16px;">
+  <h3>Source Performance Matrix</h3>
+  <table>
+    <tr><th>Source</th><th>Applications</th><th>Hires</th><th>Hire Rate</th><th>Avg TTH</th><th>Avg Score</th><th>Quality</th><th>Action</th></tr>
+    ${[...srcData].sort((a,b)=>b.apps-a.apps).map(d=>`<tr>
+      <td><b>${d.s}</b></td><td>${d.apps}</td><td>${d.hired}</td>
+      <td><span class="badge ${d.hireRate>=40?'bg':d.hireRate>=20?'ba':'br'}">${d.hireRate}%</span></td>
+      <td>${d.avgTTH>0?d.avgTTH+'d':'—'}</td>
+      <td>${d.avgScore>0?d.avgScore:'—'}</td>
+      <td style="color:${qualColor(d)};font-weight:700;">${qualLabel(d)}</td>
+      <td style="font-size:11px">${d.hireRate>=40?'▲ Increase':d.hireRate>=20?'→ Maintain':'▼ Review'}</td>
+    </tr>`).join('')}
+  </table>
+</div>
+
+<div class="grid g2">
+  <div class="card"><h3>Volume vs Hire Rate by Source</h3>
+    <div class="chart-wrap"><canvas id="so1"></canvas></div>
+    <p class="caption">Referrals are the quality champion. LinkedIn brings volume but average hire rate. GitHub is small but punches above its weight.</p>
+  </div>
+  <div class="card"><h3>Source Mix (All Applicants)</h3>
+    <div class="chart-wrap"><canvas id="so2"></canvas></div>
+    <p class="caption">LinkedIn dominates at ${Math.round([...srcData].sort((a,b)=>b.apps-a.apps)[0].apps/rows.length*100)}% — healthy for scale but risky for quality concentration.</p>
+  </div>
+</div>
+
+<div class="grid g2">
+  <div class="card"><h3>Avg Time-to-Hire by Source</h3>
+    <div class="chart-wrap"><canvas id="so3"></canvas></div>
+    <p class="caption">Referrals close fastest — pre-screened trust reduces early-stage friction. Indeed has longest cycle.</p>
+  </div>
+  <div class="card"><h3>Avg Interview Score by Source</h3>
+    <div class="chart-wrap"><canvas id="so4"></canvas></div>
+    <p class="caption">Referrals and Dribbble produce highest-scoring candidates on average. Validates quality sourcing from niche channels.</p>
+  </div>
+</div>
+
+<div class="card">
+  <h3>ROI Reallocation Strategy</h3>
+  <div class="strat">
+    <div class="sc" style="background:#f0fdf4;border:1px solid #bbf7d0;"><h4 style="color:#166534;">▲ Increase Investment</h4><ul>
+      ${[...srcData].sort((a,b)=>b.hireRate-a.hireRate).slice(0,3).map(d=>`<li><b>${d.s}</b> — ${d.hireRate}% hire rate, ${d.avgTTH>0?d.avgTTH+'d avg TTH':''}</li>`).join('')}
+    </ul></div>
+    <div class="sc" style="background:#f8fafc;border:1px solid #e2e8f0;"><h4 style="color:#475569;">→ Maintain</h4><ul>
+      ${[...srcData].filter(d=>d.hireRate>=20&&d.hireRate<40).map(d=>`<li><b>${d.s}</b> — performing at market average</li>`).join('')||'<li>All sources either star or review status</li>'}
+    </ul></div>
+    <div class="sc" style="background:#fff7ed;border:1px solid #fed7aa;"><h4 style="color:#c2410c;">▼ Review or Reduce</h4><ul>
+      ${[...srcData].filter(d=>d.hireRate<20&&d.apps>1).map(d=>`<li><b>${d.s}</b> — only ${d.hireRate}% hire rate, review targeting</li>`).join('')||'<li>No underperforming sources identified</li>'}
+    </ul></div>
+  </div>
+</div>
+${chartScript(`
+const _sd=${JSON.stringify([...srcData].sort((a,b)=>b.apps-a.apps))};
+C('so1','bar',_sd.map(d=>d.s),[
+  {label:'Applications',data:_sd.map(d=>d.apps),backgroundColor:'rgba(67,97,238,0.5)',borderRadius:3,yAxisID:'y'},
+  {label:'Hire Rate %',data:_sd.map(d=>d.hireRate),backgroundColor:'#0a9c5a',borderRadius:3,yAxisID:'y1'}
+],{scales:{y:{beginAtZero:true,position:'left',ticks:{font:{size:9}}},y1:{beginAtZero:true,position:'right',max:100,ticks:{font:{size:9}},grid:{drawOnChartArea:false}}}});
+C('so2','doughnut',_sd.map(d=>d.s),[{data:_sd.map(d=>d.apps),backgroundColor:PAL}]);
+C('so3','bar',_sd.filter(d=>d.avgTTH>0).map(d=>d.s),[{label:'Avg Days',data:_sd.filter(d=>d.avgTTH>0).map(d=>d.avgTTH),backgroundColor:_sd.filter(d=>d.avgTTH>0).map(d=>d.avgTTH<=25?'#0a9c5a':d.avgTTH<=32?'#f77f00':'#e5383b'),borderRadius:4}],{indexAxis:'y',plugins:{legend:{display:false}}});
+C('so4','bar',_sd.filter(d=>d.avgScore>0).map(d=>d.s),[{label:'Avg Score',data:_sd.filter(d=>d.avgScore>0).map(d=>d.avgScore),backgroundColor:'#7209b7',borderRadius:4}],{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{min:60}}});
+`)}
+</body></html>`;
+}
+
+// ═══════════════════════════════════════
+// 10. PREDICTIVE INSIGHTS
+// ═══════════════════════════════════════
+function buildDemoForecast() {
+  const rows = parseDemoRows();
+  const hired = rows.filter(r=>r.status==='Hired');
+
+  const monthC={};
+  rows.forEach(r=>{ const m=r.applied_date?r.applied_date.slice(0,7):'?'; monthC[m]=(monthC[m]||0)+1; });
+  const months=Object.keys(monthC).sort();
+  const monthVals=months.map(m=>monthC[m]);
+
+  // Simple linear forecast: extend 3 periods
+  const n=monthVals.length, sumX=n*(n-1)/2, sumY=monthVals.reduce((a,b)=>a+b,0);
+  const sumXY=monthVals.reduce((s,v,i)=>s+i*v,0), sumX2=monthVals.reduce((s,_,i)=>s+i*i,0);
+  const slope=(n*sumXY-sumX*sumY)/(n*sumX2-sumX*sumX);
+  const intercept=(sumY-slope*sumX)/n;
+  const forecast=[-2,-1,0,1,2,3].map(i=>Math.max(0,Math.round(intercept+slope*(n+i))));
+  const forecastMonths=['2024-06','2024-07','2024-08'];
+  const allMonths=[...months,...forecastMonths];
+  const baseF=[...monthVals,null,null,null];
+  const predF=[...Array(n).fill(null),...forecast.slice(3)];
+  const optF=[...Array(n).fill(null),...forecast.slice(3).map(v=>Math.round(v*1.15))];
+  const consF=[...Array(n).fill(null),...forecast.slice(3).map(v=>Math.round(v*0.85))];
+
+  const skillC={};
+  rows.forEach(r=>{ (r.skills||'').split(',').forEach(s=>{s=s.trim().replace(/"/g,'');if(s)skillC[s]=(skillC[s]||0)+1;}); });
+  const topSkills=Object.entries(skillC).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">${demoCss()}</head><body>
+<h1>🔮 Predictive Insights Dashboard</h1>
+<p class="sub">Forward-looking analytics · 3-scenario forecast · demand projection · risk modelling · based on Jan–May 2024 data</p>
+
+<div class="card" style="margin-bottom:16px;background:linear-gradient(135deg,#eff6ff,#fdf4ff);border:1.5px solid #c7d2fe;">
+  <h3 style="color:#4361ee;">Forecast Assumptions</h3>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;font-size:12.5px;">
+    <div><b>Data period:</b> Jan–May 2024 (5 months)</div>
+    <div><b>Method:</b> Linear trend extrapolation</div>
+    <div><b>Forecast horizon:</b> 3 months (Jun–Aug 2024)</div>
+    <div><b>Confidence:</b> Medium — limited historical data</div>
+    <div><b>Base growth:</b> ${slope>0?'+':''}${slope.toFixed(1)} candidates/month</div>
+    <div><b>Scenarios:</b> Base | +15% Optimistic | -15% Conservative</div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:16px;">
+  <h3>Hiring Volume Forecast — 3 Scenarios (Jun–Aug 2024)</h3>
+  <div style="height:260px;position:relative;"><canvas id="pr1"></canvas></div>
+  <p class="caption">Base forecast projects ${forecast[3]}-${forecast[5]} candidates/month. Optimistic assumes increased sourcing effort; Conservative accounts for seasonal slowdown.</p>
+</div>
+
+<div class="grid g2">
+  <div class="card"><h3>Skills Demand Forecast (Current vs Projected +6mo)</h3>
+    <div class="chart-wrap"><canvas id="pr2"></canvas></div>
+    <p class="caption">Cloud (AWS/GCP/Terraform) and ML skills projected to grow 15-25%. Python demand remains dominant. Legacy skills plateau.</p>
+  </div>
+  <div class="card"><h3>Pipeline Capacity Forecast</h3>
+    <table>
+      <tr><th>Month</th><th>Projected Apps</th><th>Process Capacity</th><th>Gap</th><th>Risk</th></tr>
+      ${forecastMonths.map((m,i)=>{
+        const proj=forecast[i+3], cap=12;
+        const gap=cap-proj;
+        return `<tr><td>${m}</td><td>${proj}</td><td>${cap} hires/mo</td><td><span class="badge ${gap>=0?'bg':'br'}">${gap>=0?'+'+gap:gap} hires</span></td><td>${gap<0?'⚠ Capacity strain':'✓ Sufficient'}</td></tr>`;
+      }).join('')}
+    </table>
+    <p class="caption">Team can comfortably process 10-12 hires/month. Conservative scenario stays within capacity; optimistic may require additional TA headcount.</p>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:16px;">
+  <h3>Risk Scenarios</h3>
+  <table>
+    <tr><th>Scenario</th><th>Trigger</th><th>Probability</th><th>TTH Impact</th><th>Mitigation</th></tr>
+    <tr><td><b>Cloud skills shortage</b></td><td>AWS/Kubernetes demand spikes 30%+</td><td><span class="badge ba">Medium</span></td><td>+8-12 days</td><td>Build bench pipeline now; engage cloud bootcamps</td></tr>
+    <tr><td><b>LinkedIn algo change</b></td><td>Platform limits recruiter outreach</td><td><span class="badge ba">Medium</span></td><td>+5 days</td><td>Diversify to GitHub, Wellfound, Naukri immediately</td></tr>
+    <tr><td><b>Offer decline spike</b></td><td>Competing offers increase 25%+</td><td><span class="badge bg">Low</span></td><td>+15 days</td><td>Quarterly compensation benchmarking, faster offer turnaround</td></tr>
+    <tr><td><b>Q3 budget freeze</b></td><td>Hiring pause for 4-6 weeks</td><td><span class="badge ba">Medium</span></td><td>Pipeline delays</td><td>Maintain warm pipelines; pre-close final round candidates</td></tr>
+    <tr><td><b>Senior attrition</b></td><td>2+ Engineering leads exit</td><td><span class="badge br">High</span></td><td>+20 days</td><td>Succession planning; proactive senior pipeline building</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <h3>Predictive Recommendations</h3>
+  <div class="strat">
+    <div class="sc" style="background:#f0fdf4;border:1px solid #bbf7d0;"><h4 style="color:#166534;">⚡ Immediate (0-30 days)</h4><ul>
+      <li>Build cloud/ML specialist pipeline for Jul-Aug demand spike</li>
+      <li>Pre-screen 15 senior engineering profiles before Q3 budget opens</li>
+      <li>Launch referral campaign targeting 5 new hires by July</li>
+    </ul></div>
+    <div class="sc" style="background:#fff7ed;border:1px solid #fed7aa;"><h4 style="color:#c2410c;">📅 Short Term (1-3 months)</h4><ul>
+      <li>Diversify sourcing: reduce LinkedIn dependency to 60% (from ${Math.round(rows.filter(r=>r.source==='LinkedIn').length/rows.length*100)}%)</li>
+      <li>Implement skills-based assessments for Python/Cloud roles</li>
+      <li>Add 0.5 TA headcount if optimistic scenario materialises</li>
+    </ul></div>
+    <div class="sc" style="background:#eff6ff;border:1px solid #bfdbfe;"><h4 style="color:#1d4ed8;">🎯 Strategic (3-12 months)</h4><ul>
+      <li>Build university partnership for junior engineering talent</li>
+      <li>Develop internal mobility programme to fill senior IC gaps</li>
+      <li>Implement predictive attrition model using interview scores + tenure</li>
+    </ul></div>
+  </div>
+</div>
+${chartScript(`
+C('pr1','bar',${JSON.stringify(allMonths)},[
+  {label:'Actual',data:${JSON.stringify(baseF)},backgroundColor:'rgba(67,97,238,0.7)',borderRadius:4},
+  {label:'Base Forecast',data:${JSON.stringify(predF)},backgroundColor:'rgba(67,97,238,0.25)',borderRadius:4,borderWidth:2,borderColor:'#4361ee'},
+  {label:'Optimistic',data:${JSON.stringify(optF)},backgroundColor:'rgba(10,156,90,0.2)',borderRadius:4,borderWidth:2,borderColor:'#0a9c5a'},
+  {label:'Conservative',data:${JSON.stringify(consF)},backgroundColor:'rgba(229,56,59,0.15)',borderRadius:4,borderWidth:2,borderColor:'#e5383b'}
+]);
+C('pr2','bar',${JSON.stringify(topSkills.map(s=>s[0]))},[
+  {label:'Current',data:${JSON.stringify(topSkills.map(s=>s[1]))},backgroundColor:'rgba(67,97,238,0.6)',borderRadius:3},
+  {label:'Projected +6mo',data:${JSON.stringify(topSkills.map((s,i)=>Math.round(s[1]*(i<3?1.2:i<5?1.1:0.95))))},backgroundColor:'rgba(10,156,90,0.6)',borderRadius:3}
+],{indexAxis:'y'});
+`)}
+</body></html>`;
+}
+
+
 // ── END DEMO MODE ──────────────────────────────────────────────
 
 function runDashAnalysis(type) {
