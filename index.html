@@ -819,7 +819,16 @@
           &nbsp;·&nbsp; Location: <strong id="ol-db-location" style="color:#f9a8d4;">—</strong>
         </div>
 
-        <button class="btn-ol-generate" id="ol-generate-btn" onclick="olGenerate()">✨ Generate LinkedIn InMails</button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <button class="btn-ol-generate" id="ol-generate-btn" onclick="olGenerate()">&#10024; Generate InMail</button>
+            <div style="text-align:center;font-size:0.68rem;color:var(--text-muted);">Structured &middot; Fast &middot; 3 variants</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <button class="btn-ol-generate" id="ol-generate-enriched-btn" onclick="olGenerateEnriched()" style="background:linear-gradient(135deg,#7209b7,#f72585);">&#129504; AI-Enriched InMail</button>
+            <div style="text-align:center;font-size:0.68rem;color:var(--text-muted);">Hyper-personalised &middot; Deep hooks &middot; Higher reply rate</div>
+          </div>
+        </div>
         <div class="ol-error" id="ol-error" style="display:none;"></div>
 
         <!-- Results -->
@@ -4834,6 +4843,181 @@ function olSelectVariant(idx) {
   if (preview) preview.innerHTML = renderVariantPreview(variants[idx], idx);
 }
 
+async function olGenerateEnriched() {
+  const jd       = document.getElementById('ol-jd').value.trim();
+  const url      = document.getElementById('ol-url').value.trim();
+  const name     = document.getElementById('ol-name').value.trim() || 'Recruiter';
+  const location = document.getElementById('ol-location').value.trim() || '';
+  const sample   = document.getElementById('ol-sample').value.trim();
+  const groqKey  = document.getElementById('ol-groq-key').value.trim();
+  const ctaNow   = olCTA;
+  const fuNow    = olFU;
+
+  document.getElementById('ol-error').style.display = 'none';
+  if (!jd)  { const e=document.getElementById('ol-error'); e.textContent='Please paste the Job Description.'; e.style.display='block'; return; }
+  if (!url) { const e=document.getElementById('ol-error'); e.textContent='Please enter the Job URL.'; e.style.display='block'; return; }
+  if (!isKeyValid(groqKey)) { const e=document.getElementById('ol-error'); e.innerHTML='Please enter your API key in the sidebar first.'; e.style.display='block'; return; }
+
+  const btn = document.getElementById('ol-generate-enriched-btn');
+  btn.disabled = true;
+  document.getElementById('ol-generate-btn').disabled = true;
+  document.getElementById('ol-results').style.display = 'none';
+
+  // Step 1: Extract company name
+  btn.innerHTML = '<span class="ol-spinner"></span>Step 1/3: Extracting company intel...';
+  let companyName = 'the company';
+  try {
+    const ex = (await callAISimple('Reply with ONLY the hiring company name, nothing else:\n\n'+jd, 20, 0)).trim();
+    if (ex && ex.length < 80) companyName = ex;
+    document.getElementById('ol-db-company').textContent = companyName;
+    document.getElementById('ol-db-company-wrap').style.display = 'inline';
+    const locEl = document.getElementById('ol-db-location');
+    if (locEl) locEl.textContent = location || '—';
+  } catch(err) { console.warn('Company extract failed'); }
+
+  // Step 2: Deep role intelligence
+  btn.innerHTML = '<span class="ol-spinner"></span>Step 2/3: Analysing role intelligence...';
+  let roleTitle='the role', coreChallenge='', companyUSP='', keySkills='', careerImpact='', contractType='Full-time', teamMission='';
+  try {
+    const intel = await callAISimple(
+      'Analyse this JD and reply in EXACT format below, no extra text:\n' +
+      'ROLE_TITLE: [value]\n' +
+      'CORE_CHALLENGE: [1 sentence — the #1 technical/business problem this person solves]\n' +
+      'COMPANY_USP: [1 sentence — what makes this company or team genuinely stand out]\n' +
+      'KEY_SKILLS: [top 3 specific skills/tech, comma-separated]\n' +
+      'CAREER_IMPACT: [1 sentence — career growth or impact this role gives the candidate]\n' +
+      'CONTRACT_TYPE: [e.g. Full-time permanent, Contract, etc.]\n' +
+      'TEAM_MISSION: [1 sentence — the team mission]\n\n' +
+      'JD:\n---\n' + jd + '\n---', 400, 0);
+    const g = (label) => { const m=intel.match(new RegExp(label+':\\s*(.+)')); return m?m[1].trim():''; };
+    roleTitle=g('ROLE_TITLE')||'the role'; coreChallenge=g('CORE_CHALLENGE');
+    companyUSP=g('COMPANY_USP'); keySkills=g('KEY_SKILLS');
+    careerImpact=g('CAREER_IMPACT'); contractType=g('CONTRACT_TYPE')||'Full-time';
+    teamMission=g('TEAM_MISSION');
+  } catch(err) { console.warn('Intel extract failed'); }
+
+  // Step 3: Generate enriched variants
+  btn.innerHTML = '<span class="ol-spinner"></span>Step 3/3: Crafting hyper-personalised InMails...';
+
+  const callDur  = olGetCallDuration();
+  const ctaInstr = ctaNow==='cv'
+    ? 'End by asking them to share their updated CV.'
+    : 'End by asking if they are open to this and suggesting a casual '+callDur+' intro call.';
+
+  let fuSchema='';
+  if (fuNow>=2) fuSchema+=',"followUp2":{"subject":"string","body":"string"}';
+  if (fuNow>=3) fuSchema+=',"followUp3":{"subject":"string","body":"string"}';
+
+  let fuInstr='';
+  if (fuNow===1) fuInstr='"followUp": 55-70 words. Warm, references first message, adds ONE new angle. Include job URL. End: Best Regards, / '+name+'.';
+  else if (fuNow===2) fuInstr='"followUp" (55-70w warm) and "followUp2" (45-60w more direct). Both include job URL. End: Best Regards, / '+name+'.';
+  else fuInstr='"followUp" (55-70w), "followUp2" (45-60w), "followUp3" (35-50w final nudge). All include job URL. End: Best Regards, / '+name+'.';
+
+  const sampleBlock = sample ? 'STYLE REFERENCE (match this tone exactly):\n"""\n'+sample+'\n"""\n' : '';
+
+  const p1 = 'You are an elite LinkedIn recruiter ghostwriter creating InMails with 3-5x higher reply rates.\n\n';
+  const p2 = 'RECRUITER: '+name+' at '+companyName+'\nJOB URL: '+url+'\nLOCATION: '+(location||'not specified')+'\n\n';
+  const p3 = 'EXTRACTED ROLE INTELLIGENCE:\n'
+    +'- Role Title: '+roleTitle+'\n'
+    +'- Core challenge: '+coreChallenge+'\n'
+    +'- Company USP: '+companyUSP+'\n'
+    +'- Key skills: '+keySkills+'\n'
+    +'- Career impact: '+careerImpact+'\n'
+    +'- Contract: '+contractType+'\n'
+    +'- Team mission: '+teamMission+'\n\n';
+  const p4 = sampleBlock;
+  const p5 = 'SUBJECT LINE: Generate 4 variants. Format: "Join '+companyName+' as '+roleTitle+' - '+(location||'[Location]')+'"\n'
+    +'Vary location detail or add specific angle. Max 12 words each.\n\n';
+  const p6 = 'MESSAGE STRUCTURE (follow EXACTLY):\n\n'
+    +'Hi {firstName},\n\n'
+    +'[Intro: "I am '+name+', [recruiter title matching function at '+companyName+']. I hope you are doing well."]\n\n'
+    +'[HOOK PARAGRAPH - this is the key differentiator. 2 sentences. Make it feel written specifically for someone with their background.\n'
+    +'Variant A = TECH HOOK: reference the specific challenge ('+coreChallenge+') — frame it as a problem only deep experts can solve\n'
+    +'Variant B = IMPACT HOOK: paint the measurable impact and what success looks like 12 months in\n'
+    +'Variant C = GROWTH HOOK: frame the career trajectory and doors this role unlocks — mission ('+teamMission+')]\n\n'
+    +'We are looking for a '+roleTitle+' with deep expertise in '+keySkills+'.\n\n'
+    +'Role details: '+url+' - '+contractType+'\n\n'
+    +'[CTA: '+ctaInstr+']\n\n'
+    +'Best Regards,\n'+name+'\n\n';
+  const p7 = 'RULES:\n'
+    +'- Body: 100-130 words total\n'
+    +'- BANNED: exciting opportunity, I came across your profile, hope this finds you well, passionate, fast-paced, dynamic, hit the ground running, unique opportunity\n'
+    +'- Use \\n\\n between paragraphs\n'
+    +'- Tone: peer-to-peer, intelligent, direct\n\n';
+  const p8 = 'FOLLOW-UPS:\n'+fuInstr+'\n'
+    +'Structure: Hi {firstName}, / reference original / ONE new insight / job URL / soft CTA / blank line / Best Regards, / '+name+'\n\n';
+  const p9 = 'Return ONLY valid JSON, no markdown:\n'
+    +'{"subjectLines":["s1","s2","s3","s4"],"outreachVariants":[{"label":"Tech Hook","subject":"string","body":"string"},{"label":"Impact Hook","subject":"string","body":"string"},{"label":"Growth Hook","subject":"string","body":"string"}],"followUp":{"subject":"string","body":"string"}'+fuSchema+'}';
+
+  const enrichedPrompt = p1+p2+p3+p4+p5+p6+p7+p8+p9;
+
+  try {
+    let raw = (await callAISimple(enrichedPrompt, 4000, 0.8)||'').trim();
+    raw = raw.replace(/```json|```/gi,'').trim();
+    const si=raw.indexOf('{'), ei=raw.lastIndexOf('}');
+    if (si!==-1&&ei!==-1) raw=raw.slice(si,ei+1);
+    const r = JSON.parse(raw);
+
+    const resultsEl = document.getElementById('ol-results');
+    resultsEl.style.display = 'block';
+
+    // Subject lines
+    document.getElementById('ol-subj-lines').innerHTML = (r.subjectLines||[]).map((s,i)=>
+      '<div class="ol-subj-row"><span>"'+olEscH(s)+'"</span><button class="ol-copy-btn" id="olsbe'+i+'" onclick="olCopyText(this.dataset.v,this.id)" data-v="'+olEsc(s)+'">&#128203; Copy</button></div>'
+    ).join('');
+
+    // Enriched info badge
+    const badge = '<div style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:linear-gradient(135deg,rgba(114,9,183,0.07),rgba(247,37,133,0.05));border:1.5px solid rgba(114,9,183,0.2);border-radius:8px;margin-bottom:12px;">'
+      +'<span style="font-size:1.1rem;">&#129504;</span>'
+      +'<div><div style="font-size:0.78rem;font-weight:700;color:#7209b7;">AI-Enriched &mdash; 3 Hook Angles</div>'
+      +'<div style="font-size:0.68rem;color:var(--text-muted);">Role: <b>'+olEscH(roleTitle)+'</b> &nbsp;&middot;&nbsp; Skills: <b>'+olEscH(keySkills)+'</b></div></div></div>';
+
+    // Variants
+    const variants = r.outreachVariants||[];
+    window._olVariants = variants;
+    const hookLabels = ['&#129504; Tech Hook','&#127919; Impact Hook','&#128640; Growth Hook'];
+    const varBtns = variants.map((v,i)=>
+      '<button id="ol-var-btn-'+i+'" onclick="olSelectVariant('+i+')" style="flex:1;padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);background:white;font-family:inherit;font-size:0.76rem;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all 0.15s;">'+(hookLabels[i]||v.label)+'</button>'
+    ).join('');
+
+    document.getElementById('ol-msg-cards').innerHTML =
+      '<div class="ol-card" style="margin-bottom:12px;">'
+      +'<div class="ol-card-hdr" style="margin-bottom:10px;">'
+      +'<span>&#129504;</span><span style="font-weight:700;">AI-Enriched Outreach Variants</span>'
+      +'<span class="ol-badge" style="margin-left:auto;background:rgba(114,9,183,0.12);color:#7209b7;">3 Hook Angles</span></div>'
+      +badge
+      +'<div style="display:flex;gap:8px;margin-bottom:12px;">'+varBtns+'</div>'
+      +'<div id="ol-variant-preview" style="border:1.5px solid var(--border);border-radius:10px;overflow:hidden;"></div>'
+      +'</div>';
+
+    if (variants.length) {
+      setTimeout(()=>olSelectVariant(0), 50);
+      const b0=document.getElementById('ol-var-btn-0');
+      if (b0) { b0.style.background='linear-gradient(135deg,#7209b7,#f72585)'; b0.style.color='white'; b0.style.borderColor='transparent'; }
+    }
+
+    // Follow-ups
+    let fuCards='';
+    if (r.followUp)  fuCards+=olMsgCard('followup', '&#128172;','Follow-Up 1','ol-badge-indigo','1st Follow-Up',r.followUp.subject,r.followUp.body);
+    if (r.followUp2) fuCards+=olMsgCard('followup2','&#128172;','Follow-Up 2','ol-badge-purple','2nd Follow-Up',r.followUp2.subject,r.followUp2.body);
+    if (r.followUp3) fuCards+=olMsgCard('followup3','&#128172;','Follow-Up 3','ol-badge-pink',  '3rd Follow-Up',r.followUp3.subject,r.followUp3.body);
+    if (fuCards) {
+      document.getElementById('ol-msg-cards').innerHTML +=
+        '<div class="ol-card" style="margin-top:12px;"><div class="ol-card-hdr"><span>&#128172;</span><span style="font-weight:700;">Follow-Up Sequence</span></div>'+fuCards+'</div>';
+    }
+
+    resultsEl.scrollIntoView({behavior:'smooth',block:'start'});
+  } catch(err) {
+    const errEl=document.getElementById('ol-error');
+    errEl.innerHTML='&#9888; Error: '+(err.message||'JSON parse failed')+' &nbsp;<small>Try again — AI occasionally returns malformed JSON.</small>';
+    errEl.style.display='block';
+  }
+
+  btn.innerHTML='&#129504; AI-Enriched InMail';
+  btn.disabled=false;
+  document.getElementById('ol-generate-btn').disabled=false;
+}
+
 async function olGenerate() {
   const jd = document.getElementById('ol-jd').value.trim();
   const url = document.getElementById('ol-url').value.trim();
@@ -4886,60 +5070,78 @@ async function olGenerate() {
     : 'Write warm, professional, human recruiter tone. Concise but compelling.';
 
   // Build outreach prompt
-  const prompt = `You are an expert LinkedIn recruiter copywriter writing on behalf of ${name}, a recruiter at ${companyName}.
+  const roleTitle   = jd.match(/(?:job title|position|role)[:\s]+([^\n]+)/i)?.[1]?.trim() || 'the role';
+  const companyField= document.getElementById('ol-name').value.trim() || name;
 
-THE HIRING COMPANY: "${companyName}"
-RECRUITER NAME: ${name}
-JOB URL: ${url}
-CTA: ${ctaInstr}
-FOLLOW-UPS: ${fuInstr}
+  const prompt = `You are an expert LinkedIn recruiter writing on behalf of ${name}, a recruiter at ${companyName}.
 
-JOB DESCRIPTION (read carefully — extract specific role title, tech stack, team mission, impact):
+CONTEXT:
+- Recruiter name: ${name}
+- Company: ${companyName}
+- Job URL: ${url}
+- Location: ${location}
+- CTA instruction: ${ctaInstr}
+
+JOB DESCRIPTION:
 ---
 ${jd}
 ---
 
 ${sampleBlock}
 
-MANDATORY STRUCTURE FOR EVERY OUTREACH MESSAGE:
-- First line: Hi {firstName},
-- Second line: blank line
-- Para 1: Introduce yourself as ${name} from the talent/recruiting team at ${companyName}. Mention one compelling specific detail about ${companyName} or the team from the JD.
-- Para 2: Describe what the role actually involves — use SPECIFIC details from the JD (exact role title, technologies, scope, team impact). Make this feel like you genuinely read the JD.
-- Para 3: ${ctaInstr}
-- Blank line before sign-off
-- Second-to-last line: Best Regards,
-- Last line: ${name}
+════════════════════════════════════════════
+FIRST INMAIL — EXACT FORMAT TO FOLLOW
+════════════════════════════════════════════
 
-WRITING RULES:
-- Extract from JD: exact role title, 2-3 specific technologies or skills, team mission, measurable impact
-- Every variant must reference AT LEAST 2 specific JD details — no generic copy
-- BANNED: "exciting opportunity", "fast-paced", "dynamic team", "I came across your profile", "hope this finds you well", "passionate about", "hit the ground running"
-- 130-160 words per message body
-- Use \\\\n\\\\n between paragraphs
+The subject line format MUST be:
+"Join [Company] as [Exact Role Title] — [Location]"
+Example: "Join Confluent as Staff Software Engineer — Remote (UK, Poland)"
 
-GENERATE EXACTLY 3 VARIANTS with genuinely different angles:
-- Variant A — "Role & Impact Focus": lead with the specific role scope and business impact
-- Variant B — "Tech & Challenge Focus": lead with the tech stack and the engineering/analytical challenge
-- Variant C — "Growth & Opportunity Focus": lead with career growth, visibility or mission angle
+The message body MUST follow this EXACT structure — no deviations:
 
-SUBJECT LINE RULES (generate 4 options):
-- Each must reference the exact role title + a specific skill or product from the JD
-- Make them curiosity-driven and specific — no generic phrases
-- Vary the angle: one impact-led, one skill-led, one company-mission-led, one question-format
-- Max 12 words each. No ALL CAPS.
+Line 1:  Hi {firstName},
+Line 2:  (blank)
+Line 3:  [1 sentence: "I'm [name], the [recruiter title] for [function/team] at [company]."] — use specific recruiter title matching the role (e.g. Lead Talent Sourcer for Technical roles, Senior Recruiter for Product roles). Add "I hope you're doing well."
+Line 4:  (blank)
+Line 5:  [1–2 sentences describing what the company/team is building RIGHT NOW — extract this directly from the JD. Be specific: mention the actual product, mission, platform or technology being built.]
+Line 6:  [1 sentence: "We're looking for a [Exact Role Title] with strong expertise in [2–3 specific skills/technologies from JD]."]
+Line 7:  (blank)
+Line 8:  📌 Role details: [Job URL] — [contract type from JD e.g. Full-time permanent role (no B2B) / Contract / Part-time]
+Line 9:  (blank)
+Line 10: [CTA sentence — soft, no pressure. Example: "Let me know if this sounds interesting to you — I'd be happy to connect and share more details."]
+Line 11: (blank)
+Line 12: Best Regards,
+Line 13: ${name}
+
+RULES:
+- Total body length: 80–120 words. SHORT and direct.
+- NO filler phrases: "exciting opportunity", "hope this finds you well", "I came across your profile", "passionate about", "fast-paced", "dynamic", "hit the ground running", "unique opportunity"
+- Extract the EXACT role title, specific technologies/skills, and what the team is building from the JD
+- The contract type line (📌) MUST include the job URL and contract type
+- Subject line MUST include company name + exact role title + location
+- Tone: warm, professional, peer-to-peer — like a message from a real person, not a template
+- Use \\n\\n between paragraphs in the body
+
+GENERATE EXACTLY 3 VARIANTS — same structure, different angle in lines 5–6:
+- Variant A "Product & Scale Focus": emphasis on the product/platform being built and scale
+- Variant B "Technical Challenge Focus": emphasis on the engineering/technical challenge
+- Variant C "Mission & Impact Focus": emphasis on the team mission and candidate's career impact
+
+SUBJECT LINE: Generate 4 options, all following the format:
+"Join [Company] as [Exact Role Title] — [Location/Variant]"
+Vary the location or add a specific angle in brackets. Max 12 words each.
 
 FOLLOW-UP RULES:
 ${fuInstr}
 - Start: Hi {firstName},
-- Reference the original outreach + add ONE new JD-specific detail not mentioned before
+- Reference that you reached out before + add ONE new angle not in the first message
+- Keep it short: 50–70 words
 - Include job URL: ${url}
-- End: blank line, then "Best Regards,", then "${name}" on next line
+- End with blank line, then "Best Regards,", then "${name}"
 
 Return ONLY raw valid JSON — no markdown, no preamble:
-{"subjectLines":["s1","s2","s3","s4"],"outreachVariants":[{"label":"Role & Impact Focus","subject":"string","body":"string"},{"label":"Tech & Challenge Focus","subject":"string","body":"string"},{"label":"Growth & Opportunity Focus","subject":"string","body":"string"}],"followUp":{"subject":"string","body":"string"}${fuSchema}}
+{"subjectLines":["s1","s2","s3","s4"],"outreachVariants":[{"label":"Product & Scale Focus","subject":"string","body":"string"},{"label":"Technical Challenge Focus","subject":"string","body":"string"},{"label":"Mission & Impact Focus","subject":"string","body":"string"}],"followUp":{"subject":"string","body":"string"}${fuSchema}}
 CRITICAL: Return ONLY valid JSON.`;
-
   try {
     let olRawText;
     try { olRawText = await callAISimple(prompt, 3500, 0.75); } catch(e) { throw e; }
