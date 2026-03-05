@@ -391,7 +391,7 @@
     <button class="mode-btn" onclick="setMode('jd')" id="btn-jd"><span class="icon">📝</span><span>Write Job Description</span></button>
     <button class="mode-btn" onclick="setMode('general')" id="btn-general"><span class="icon">💬</span><span>General Assistant</span></button>
 
-    <button class="mode-btn battle" onclick="showBattle()" id="btn-battle"><span class="icon">⚔️</span><span>Battle Cards Builder</span></button>
+    <button class="mode-btn battle active" onclick="showBattle()" id="btn-battle"><span class="icon">⚔️</span><span>Battle Cards Builder</span></button>
 
     <div class="api-box">
       <label>🔑 API Provider</label>
@@ -603,7 +603,7 @@
       <div class="battle-config">
         <div class="bc-field">
           <div class="bc-label">🏢 Your Organisation (Core)</div>
-          <input class="bc-input" id="bc-core" placeholder="e.g. Confluent" type="text"/>
+          <input class="bc-input" id="bc-core" placeholder="e.g. Confluent" type="text" oninput="const oc=document.getElementById('ol-company');const pb=document.getElementById('pb-our-company');if(oc&&!oc._userEdited)oc.value=this.value;if(pb&&!pb._userEdited)pb.value=this.value;"/>
         </div>
         <div class="bc-field half">
           <div class="bc-label">⚔️ Competitors (comma-separated)</div>
@@ -629,7 +629,7 @@
         </div>
         <div class="bc-field" style="position:relative;">
           <div class="bc-label">📍 Talent Market</div>
-          <input type="text" class="bc-input" id="bc-region" placeholder="Type city, country or region…" autocomplete="off" oninput="regionSearch(this.value)" onkeydown="regionKey(event)" onfocus="regionSearch(this.value)" onblur="setTimeout(()=>document.getElementById('region-dropdown').style.display='none',200)" style="width:100%;"/>
+          <input type="text" class="bc-input" id="bc-region" placeholder="Type city, country or region…" autocomplete="off" oninput="regionSearch(this.value)" onkeydown="regionKey(event)" onfocus="regionSearch(this.value)" onblur="setTimeout(()=>{if(!window._regionClicking)document.getElementById('region-dropdown').style.display='none'},200)" style="width:100%;"/>
           <div id="region-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--accent);border-radius:0 0 10px 10px;max-height:220px;overflow-y:auto;z-index:999;box-shadow:0 8px 24px rgba(67,97,238,0.15);"></div>
         </div>
         <div class="bc-field">
@@ -836,7 +836,7 @@
             <div class="pb-label">🎯 Target Role / JD <span style="color:var(--text-muted);font-weight:400;">(optional)</span></div>
             <textarea id="pb-jd" class="pb-input pb-textarea" rows="3" placeholder="Paste job description or role summary…"></textarea>
 
-            <div class="pb-label" style="margin-top:12px;">🎯 Candidate Priorities <span style="color:var(--text-muted);font-weight:400;">(select all that apply)</span></div>
+            <div class="pb-label" style="margin-top:12px;">🎯 Candidate Priorities <span style="color:var(--text-muted);font-weight:400;">(optional)</span></div>
             <div class="pb-priorities" id="pb-priorities">
               <label class="pb-prio" onclick="pbTogglePrio(this)"><input type="checkbox" value="Compensation">💰 Compensation</label>
               <label class="pb-prio" onclick="pbTogglePrio(this)"><input type="checkbox" value="Growth">📈 Growth</label>
@@ -902,7 +902,6 @@
               <span>🎙️</span>
               <span class="pb-sec-hdr-title">60–90 sec Screening Call Pitch</span>
               <span class="pb-sec-badge" style="background:#dcfce7;color:#166534;">Read aloud</span>
-              <button class="pb-copy-btn" onclick="pbCopySection('pb-pitch-content')">📋 Copy</button>
             </div>
             <div class="pb-sec-body" id="pb-pitch-content"></div>
           </div>
@@ -1035,11 +1034,15 @@
           </div>
         </div>
 
-        <!-- Recruiter name + location + key -->
+        <!-- Recruiter name + company + location + key -->
         <div style="margin-bottom:14px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
           <div style="flex:1;min-width:140px;">
             <label class="ol-label">👤 Your Name (sign-off)</label>
             <input id="ol-name" type="text" class="ol-input" placeholder="e.g. Vikash" value="Vikash"/>
+          </div>
+          <div style="flex:1;min-width:160px;">
+            <label class="ol-label">🏢 Your Company</label>
+            <input id="ol-company" type="text" class="ol-input" placeholder="e.g. Confluent, Stripe…"/>
           </div>
           <div style="flex:1;min-width:160px;">
             <label class="ol-label">📍 Job Location <span style="color:var(--danger);">*</span></label>
@@ -1132,7 +1135,7 @@
             <div class="chip" onclick="usePersonalChip('Write a passive candidate pitch email')">Passive candidate pitch</div>
           </div>
           <div style="display:flex;gap:10px;align-items:flex-end;">
-            <textarea id="personal-input" rows="1" class="ol-input" style="flex:1;resize:none;min-height:44px;max-height:120px;" placeholder="Ask for an outreach email or follow-up..." onkeydown="personalHandleKey(event)" oninput="autoResize(this)"></textarea>
+            <textarea id="personal-input" rows="1" class="ol-input" style="flex:1;resize:none;min-height:44px;max-height:120px;" placeholder="Ask for an outreach email or follow-up..." onkeydown="personalHandleKey(event)" oninput="autoResize(this);updatePersonalSendBtn()"></textarea>
             <button class="send-btn" id="personal-send-btn" onclick="sendPersonalMessage()" disabled>➤</button>
           </div>
         </div>
@@ -1590,21 +1593,20 @@ async function handleDashFiles(input) {
 }
 
 function removeDashFile(chipId) {
-  dashFiles = dashFiles.filter(f => f.chipId !== chipId);
   const chip = document.getElementById(chipId);
-  if (chip) chip.remove();
-  if (dashFiles.length === 0) {
-    document.getElementById('dash-analysis-bar').style.display = 'none';
-    document.getElementById('dash-custom-input').style.display = 'none';
-    document.getElementById('dash-content').innerHTML = `
-      <div class="dash-empty" id="dash-drop-zone"
-        ondragover="event.preventDefault();this.style.background='rgba(67,97,238,0.06)'"
-        ondragleave="this.style.background=''"
-        ondrop="event.preventDefault();this.style.background='';handleDashFiles({files:event.dataTransfer.files})">
-        <div class="big-icon">📂</div>
-        <h3>Upload your data files</h3>
-        <p>Drop one or multiple files — AI extracts content and generates an executive-grade intelligence dashboard.</p>
-      </div>`;
+  if (chip) {
+    // L-03: Remove from dashFiles array by matching chip text content
+    const chipText = chip.textContent || '';
+    const namePart = chipText.split(' ')[1] || '';
+    dashFiles = dashFiles.filter(f => !chipText.includes(f.name));
+    chip.remove();
+  }
+  // Hide analysis bar if no files remain
+  if (!dashFiles.length) {
+    const bar = document.getElementById('dash-analysis-bar');
+    if (bar) bar.style.display = 'none';
+    const content = document.getElementById('dash-content');
+    if (content) content.innerHTML = '';
   }
 }
 
@@ -1763,13 +1765,28 @@ OUTPUT FORMAT (always follow this exactly):
 ===END===
 
 DASHBOARD DESIGN STANDARDS:
+- MANDATORY: First line of HTML must be: <!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 - Use Chart.js from: https://cdn.jsdelivr.net/npm/chart.js
+- Use Google Fonts: <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 - Colour palette: #4361ee (blue), #f72585 (pink), #f77f00 (orange), #06b6d4 (teal), #0a9c5a (green), #7209b7 (purple)
-- White background, clean card layout, professional typography
+- White background, clean card layout, professional typography (font-family: Inter, sans-serif)
 - Every chart must include: title + one-line insight caption explaining the "so what"
 - KPI stat cards in the top row with large bold numbers
-- Fully self-contained — all CSS inline, no external dependencies except Chart.js CDN
-- REAL extracted data only — never use placeholder or example numbers`;
+- Fully self-contained — all CSS inline, no external dependencies except Chart.js CDN and Google Fonts
+- REAL extracted data only — never use placeholder or example numbers
+- TABLE DESIGN RULES (MANDATORY):
+  * All tables: border-collapse:collapse; width:100%; font-family:Inter,sans-serif
+  * Header cells (th): background:#f8fafc; padding:10px 14px; text-align:left; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#64748b; border-bottom:2px solid #e2e8f0; white-space:nowrap
+  * Data cells (td): padding:9px 14px; font-size:0.83rem; color:#1e293b; border-bottom:1px solid #f1f5f9; vertical-align:middle
+  * Numeric columns (rank, count, %, numbers): text-align:right
+  * Text columns (name, employer, skill): text-align:left
+  * First column always left-aligned
+  * tbody tr:hover { background:#f8fafc }
+  * DO NOT mix text-align directions in the same column between th and td — they must match
+- EMOJI / UNICODE RULES:
+  * Emojis are ALLOWED and encouraged in headers, KPI labels, section titles
+  * Because charset is UTF-8, all emojis will render correctly
+  * Use emojis like: 👥 📊 🎯 ✅ 💡 📈 ⚠️ — they will display perfectly`;
 
 // ── DEMO MODE ──────────────────────────────────────────────────
 const DEMO_CSV = `id,candidate_name,role,department,source,applied_date,status,stage,days_to_hire,location,experience_years,skills,salary_offered,gender,interview_score
@@ -1855,6 +1872,7 @@ function loadDemoData() {
   content.innerHTML = `
     <div style="background:linear-gradient(135deg,rgba(67,97,238,0.06),rgba(247,37,133,0.04));border:1.5px solid rgba(67,97,238,0.2);border-radius:16px;padding:22px 24px;">
       <div style="font-size:1rem;font-weight:800;color:#1e293b;margin-bottom:4px;">🎯 Demo Dataset Loaded</div>
+      <div style="display:inline-block;background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:3px 10px;font-size:0.72rem;font-weight:700;color:#92400e;margin-bottom:6px;">⚠️ Illustrative data only — not generated from your files</div>
       <p style="font-size:0.8rem;color:#6b7280;margin-bottom:18px;">50 sample candidates · Engineering, Data, Product, Design, Sales, HR · Click any mode to preview it instantly — no API key needed.</p>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;">
         <button id="db-ti"  class="demo-mode-btn" style="background:#f0f4ff;border:1.5px solid #c7d2fe;color:#3730a3;">🧠 Talent Intelligence</button>
@@ -3721,7 +3739,31 @@ function parseDashResponse(reply, type, label) {
   if (dashHtml) {
     // Clean up any markdown code fences
     dashHtml = dashHtml.replace(/^```html\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
-    const blob = new Blob([dashHtml], { type: 'text/html' });
+    // Ensure charset meta is present — inject if AI omitted it
+    if (!dashHtml.toLowerCase().includes('charset')) {
+      dashHtml = dashHtml.replace(/<head>/i, '<head><meta charset="UTF-8">');
+    }
+    // M-08: wrap bare fragments that have no <head> at all
+    if (!dashHtml.toLowerCase().includes('<head')) {
+      dashHtml = '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' + dashHtml + '</body></html>';
+    }
+    // Inject Inter font if not present
+    if (!dashHtml.includes('fonts.googleapis.com')) {
+      dashHtml = dashHtml.replace('</head>', '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></head>');
+    }
+    // Inject global table fix CSS
+    // Inject global table fix CSS (string concat avoids backtick escaping issues)
+    var tableFixCss = '<style>' +
+      '*{box-sizing:border-box;}' +
+      "body{font-family:'Inter',sans-serif;}" +
+      'table{border-collapse:collapse;width:100%;margin-bottom:12px;}' +
+      'th{background:#f8fafc;padding:10px 14px;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#64748b;border-bottom:2px solid #e2e8f0;white-space:nowrap;text-align:left;}' +
+      'td{padding:9px 14px;font-size:0.83rem;color:#1e293b;border-bottom:1px solid #f1f5f9;vertical-align:middle;}' +
+      'tr:hover td{background:#f8fafc;}' +
+      '</style>';
+    dashHtml = dashHtml.replace('</head>', tableFixCss + '</head>');
+    storeDashHtml(type, dashHtml);
+    const blob = new Blob([dashHtml], { type: 'text/html; charset=utf-8' });
     const url = URL.createObjectURL(blob);
     html += `
       <div class="dash-card" style="padding:0;overflow:hidden;">
@@ -3730,8 +3772,30 @@ function parseDashResponse(reply, type, label) {
           <div style="display:flex;gap:8px;">
             <button onclick="document.getElementById('dash-iframe-${type}').requestFullscreen()" 
               style="background:white;border:1.5px solid var(--border);border-radius:6px;padding:4px 10px;font-size:0.72rem;cursor:pointer;font-family:'Outfit',sans-serif;color:var(--text-muted);">⛶ Fullscreen</button>
-            <a href="${url}" download="dashboard-${type}.html" 
-              style="background:rgba(67,97,238,0.08);border:1.5px solid rgba(67,97,238,0.25);border-radius:6px;padding:4px 10px;font-size:0.72rem;cursor:pointer;font-family:'Outfit',sans-serif;color:var(--accent);text-decoration:none;font-weight:600;">⬇ Download</a>
+            <div style="position:relative;display:inline-block;" id="dl-wrap-${type}">
+              <button onclick="toggleDlMenu('${type}')"
+                style="background:rgba(67,97,238,0.08);border:1.5px solid rgba(67,97,238,0.25);border-radius:6px;padding:4px 10px;font-size:0.72rem;cursor:pointer;font-family:'Outfit',sans-serif;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:4px;">
+                ⬇ Download <span style="font-size:0.6rem;">▼</span>
+              </button>
+              <div id="dl-menu-${type}" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:white;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:999;min-width:160px;overflow:hidden;">
+                <a href="${url}" download="dashboard-${type}.html"
+                  style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:0.78rem;font-weight:600;color:var(--text);text-decoration:none;border-bottom:1px solid var(--border);" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+                  🌐 HTML Report
+                </a>
+                <button onclick="dashDownloadPDF('${type}')"
+                  style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:0.78rem;font-weight:600;color:var(--text);background:none;border:none;border-bottom:1px solid var(--border);width:100%;cursor:pointer;font-family:'Outfit',sans-serif;text-align:left;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+                  📄 PDF Report
+                </button>
+                <button onclick="dashDownloadDocx('${type}')"
+                  style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:0.78rem;font-weight:600;color:var(--text);background:none;border:none;border-bottom:1px solid var(--border);width:100%;cursor:pointer;font-family:'Outfit',sans-serif;text-align:left;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+                  📝 Export (HTML→Doc)
+                </button>
+                <button onclick="dashDownloadPPT('${type}')"
+                  style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:0.78rem;font-weight:600;color:var(--text);background:none;border:none;width:100%;cursor:pointer;font-family:'Outfit',sans-serif;text-align:left;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+                  🖼️ Slides (Print HTML)
+                </button>
+              </div>
+            </div>
           </div>
         </div>
         <iframe id="dash-iframe-${type}" src="${url}" style="width:100%;height:${type==="talent_intelligence"?"1100":"640"}px;border:none;" sandbox="allow-scripts allow-same-origin"></iframe>
@@ -4041,6 +4105,13 @@ function resetBattle() {
   document.getElementById('bc-competitors').value = '';
   document.getElementById('bc-usps').value = '';
   document.getElementById('bc-weaknesses').value = '';
+  // M-01: also reset all dropdowns and region
+  const roleEl = document.getElementById('bc-role'); if (roleEl) roleEl.selectedIndex = 0;
+  const regionEl = document.getElementById('bc-region'); if (regionEl) regionEl.value = '';
+  const senEl = document.getElementById('bc-seniority'); if (senEl) senEl.selectedIndex = 0;
+  const freshEl = document.getElementById('bc-freshness'); if (freshEl) freshEl.selectedIndex = 0;
+  const outEl = document.getElementById('bc-output'); if (outEl) outEl.selectedIndex = 0;
+  const custG = document.getElementById('bc-role-custom-group'); if (custG) custG.style.display = 'none';
   document.getElementById('prompt-output').style.display = 'none';
   document.getElementById('copy-btn').style.display = 'none';
   document.getElementById('ai-launch-dropdown-wrap').style.display = 'none';
@@ -4063,7 +4134,6 @@ function promptMode(mode) {
 }
 
 function setMode(mode) {
-  currentMode = mode;
   // hide dashboard if switching to chat mode
   document.getElementById('dashboard-panel').classList.remove('visible');
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
@@ -4109,7 +4179,12 @@ function setMode(mode) {
   const ppM=document.getElementById('pitch-panel'); if(ppM) ppM.classList.remove('visible');
   document.getElementById('chat-container').style.display = 'flex';
   document.getElementById('input-area').style.display = 'block';
-  // Clear chat history on mode switch for a clean slate
+  // M-07: warn before clearing if conversation exists
+  if (chatHistory && chatHistory.length > 0) {
+    const _ok = confirm('Switching modes will clear your current conversation. Continue?');
+    if (!_ok) { return; }
+  }
+  currentMode = mode;
   chatHistory = [];
   document.getElementById('chat-container').innerHTML = '';
 }
@@ -4329,7 +4404,7 @@ async function generateBatchOutreachInline() {
 
   // Build prompt
   const recruiterName = document.getElementById('ol-name')?.value?.trim() || 'the Recruiter';
-  const companyName   = document.getElementById('ol-company')?.value?.trim() || 'our company';
+  const companyName   = document.getElementById('ol-company')?.value?.trim() || document.getElementById('bc-core')?.value?.trim() || 'our company';
 
   let msgContent = `[JOB DESCRIPTION]\n${jd}\n\n`;
   candidates.forEach((c, i) => {
@@ -4509,6 +4584,13 @@ async function pbGenerate() {
     pbShowError('Please upload a resume or paste candidate text first.'); return;
   }
 
+  // M-04: validate our company field, auto-fill from bc-core
+  const pbOurEl = document.getElementById('pb-our-company');
+  if (pbOurEl && !pbOurEl.value.trim()) {
+    const bcCoreVal = document.getElementById('bc-core')?.value?.trim();
+    if (bcCoreVal) pbOurEl.value = bcCoreVal;
+    else { pbShowError('Please enter your company name in the "Your Company" field above.'); return; }
+  }
   const ourCompany       = document.getElementById('pb-our-company').value.trim()        || 'our company';
   const candidateCompany = document.getElementById('pb-candidate-company').value.trim()  || 'their current company';
   const location         = document.getElementById('pb-candidate-location').value.trim() || '';
@@ -4808,6 +4890,342 @@ function pbCopyFollowup() {
 // END CANDIDATE PITCH BUILDER  v2
 // ══════════════════════════════════════════════════════
 
+
+// ══════════════════════════════════════════════
+// DASHBOARD DOWNLOAD HELPERS
+// ══════════════════════════════════════════════
+const _dashHtmlStore = {};
+
+function storeDashHtml(type, html) { _dashHtmlStore[type] = html; }
+
+function toggleDlMenu(type) {
+  const menu = document.getElementById('dl-menu-' + type);
+  if (!menu) return;
+  // Close any other open menus
+  document.querySelectorAll('[id^="dl-menu-"]').forEach(m => {
+    if (m.id !== 'dl-menu-' + type) m.style.display = 'none';
+  });
+  menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('[id^="dl-wrap-"]')) {
+    document.querySelectorAll('[id^="dl-menu-"]').forEach(m => m.style.display = 'none');
+  }
+});
+
+function getDashHtml(type) {
+  const stored = _dashHtmlStore[type];
+  if (stored) return stored;
+  const iframe = document.getElementById('dash-iframe-' + type);
+  if (iframe) {
+    try {
+      const d = iframe.contentDocument || iframe.contentWindow.document;
+      return d.documentElement.outerHTML;
+    } catch(e) {}
+  }
+  return null;
+}
+
+function dashGetTextContent(type) {
+  const html = getDashHtml(type);
+  if (!html) return '';
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  // Remove scripts/styles
+  tmp.querySelectorAll('script,style,canvas').forEach(el => el.remove());
+  // Format tables as text
+  tmp.querySelectorAll('table').forEach(t => {
+    const rows = [...t.querySelectorAll('tr')].map(r =>
+      [...r.querySelectorAll('th,td')].map(c => c.textContent.trim()).join('\t')
+    ).join('\n');
+    const pre = document.createElement('pre');
+    pre.textContent = rows;
+    t.replaceWith(pre);
+  });
+  return tmp.innerText || tmp.textContent;
+}
+
+async function dashDownloadPDF(type) {
+  document.querySelectorAll('[id^="dl-menu-"]').forEach(m => m.style.display = 'none');
+  const html = getDashHtml(type);
+  if (!html) { alert('Dashboard not available. Please generate the dashboard first.'); return; }
+  // Use blob URL to avoid popup-blocker issues
+  const blob = new Blob([html], { type: 'text/html; charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const printWin = window.open(url, '_blank');
+  if (!printWin) {
+    // Fallback: download as HTML and instruct
+    const a = document.createElement('a');
+    a.href = url; a.download = 'dashboard-' + type + '-print.html';
+    a.click();
+    alert('Tip: Open the downloaded file in your browser and press Ctrl+P (or Cmd+P) → Save as PDF.');
+    return;
+  }
+  printWin.onload = () => { printWin.focus(); printWin.print(); };
+}
+
+async function dashDownloadDocx(type) {
+  document.querySelectorAll('[id^="dl-menu-"]').forEach(m => m.style.display = 'none');
+  const html = getDashHtml(type);
+  if (!html) { alert('Dashboard not available. Please generate the dashboard first.'); return; }
+
+  // Build a clean Word-compatible HTML document
+  const wordHtml = [
+    '<!DOCTYPE html>',
+    '<html xmlns:o="urn:schemas-microsoft-com:office:office"',
+    '      xmlns:w="urn:schemas-microsoft-com:office:word"',
+    '      xmlns="http://www.w3.org/TR/REC-html40">',
+    '<head>',
+    '<meta charset="UTF-8">',
+    '<meta name=ProgId content=Word.Document>',
+    '<meta name=Generator content="Microsoft Word 15">',
+    '<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]-->',
+    '<style>',
+    'body{font-family:Calibri,sans-serif;font-size:11pt;color:#1e293b;margin:2cm;}',
+    'h1{font-size:18pt;color:#1e40af;margin-bottom:6pt;}',
+    'h2,h3{font-size:13pt;color:#1e40af;margin-top:14pt;margin-bottom:4pt;}',
+    'table{border-collapse:collapse;width:100%;margin-bottom:12pt;}',
+    'th{background:#dbeafe;padding:6pt 10pt;font-size:9pt;font-weight:bold;border:1pt solid #cbd5e1;text-align:left;}',
+    'td{padding:5pt 10pt;font-size:10pt;border:1pt solid #e2e8f0;vertical-align:top;}',
+    'tr:nth-child(even) td{background:#f8fafc;}',
+    '.kpi-row,.kpi{margin-bottom:8pt;}',
+    'canvas{display:none;}',
+    'script{display:none;}',
+    '</style>',
+    '</head>',
+    '<body>',
+  ].join('\n');
+
+  // Extract body content from stored html
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  tmp.querySelectorAll('script,style').forEach(el => el.remove());
+  const bodyContent = tmp.querySelector('body') ? tmp.querySelector('body').innerHTML : tmp.innerHTML;
+
+  const fullDoc = wordHtml + bodyContent + '</body></html>';
+  const blob = new Blob(['\ufeff' + fullDoc], { type: 'application/msword;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'dashboard-' + type + '.doc';
+  a.click();
+}
+
+async function dashDownloadPPT(type) {
+  document.querySelectorAll('[id^="dl-menu-"]').forEach(m => m.style.display = 'none');
+  const html = getDashHtml(type);
+  if (!html) { alert('Dashboard not available. Please generate the dashboard first.'); return; }
+
+  // Build a PptxGenJS-style presentation using a basic XML approach
+  // We'll create an HTML file formatted as a slides overview since full PPTX
+  // generation in the browser requires a large library.
+  // Instead we generate a print-optimised slides HTML (A4 landscape) that can
+  // be printed to PDF or opened as a presentation.
+
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  tmp.querySelectorAll('script').forEach(el => el.remove());
+
+  // Extract sections (cards / sections) as slides
+  const sections = [...tmp.querySelectorAll('div[style*="background"],section,.card,.dash-card,.kpi-row')];
+
+  const slidesCss = `
+    @page { size: A4 landscape; margin: 1.5cm; }
+    @media print { .slide { page-break-after: always; } }
+    body { font-family: Inter, Calibri, sans-serif; background: #1e293b; margin: 0; padding: 20px; }
+    .slide { background: white; border-radius: 12px; padding: 32px 40px; margin-bottom: 20px;
+             min-height: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+    .slide-title { font-size: 1.4rem; font-weight: 800; color: #1e40af; margin-bottom: 16px;
+                   padding-bottom: 10px; border-bottom: 3px solid #3b82f6; }
+    .slide-cover { background: linear-gradient(135deg, #1e40af, #7c3aed); color: white;
+                   display: flex; flex-direction: column; justify-content: center; align-items: center;
+                   text-align: center; min-height: 440px; }
+    .slide-cover h1 { font-size: 2rem; font-weight: 800; margin-bottom: 8px; }
+    .slide-cover p  { font-size: 1rem; opacity: 0.8; }
+    table { border-collapse: collapse; width: 100%; }
+    th { background: #dbeafe; padding: 8px 12px; font-size: 0.78rem; font-weight: 700;
+         text-transform: uppercase; letter-spacing: 0.5px; color: #1e40af; border: 1px solid #bfdbfe; }
+    td { padding: 7px 12px; font-size: 0.82rem; color: #1e293b; border: 1px solid #e2e8f0; }
+    tr:nth-child(even) td { background: #f8fafc; }
+    canvas { display: none; }
+  `;
+
+  const typeLabel = type.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  const now = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+
+  // Build slide deck
+  const deckHtml = [
+    '<!DOCTYPE html><html><head>',
+    '<meta charset="UTF-8">',
+    '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">',
+    '<style>' + slidesCss + '</style>',
+    '</head><body>',
+    // Cover slide
+    '<div class="slide slide-cover">',
+    '<h1>📊 ' + typeLabel + '</h1>',
+    '<p>Recruiting Intelligence Dashboard &nbsp;·&nbsp; ' + now + '</p>',
+    '<p style="margin-top:16px;font-size:0.85rem;opacity:0.65;">Generated by AI Recruiting Tool</p>',
+    '</div>',
+    // Content from dashboard
+    '<div class="slide"><div class="slide-title">Dashboard Content</div>',
+    tmp.querySelector('body') ? tmp.querySelector('body').innerHTML : tmp.innerHTML,
+    '</div>',
+    '</body></html>'
+  ].join('\n');
+
+  const blob = new Blob([deckHtml], { type: 'text/html; charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'dashboard-' + type + '-slides.html';
+  a.click();
+  // Inform user
+  // No alert needed - format is clearly labelled
+}
+// ══════════════════════════════════════════════
+// END DASHBOARD DOWNLOAD HELPERS
+// ══════════════════════════════════════════════
+
+
+// ══════════════════════════════════════════════════════
+// INLINE OUTREACH GENERATION (from screening action buttons)
+// ══════════════════════════════════════════════════════
+async function generateInlineInMail(resumeText, jd, encodedResume, encodedJD) {
+  const apiKey  = document.getElementById('api-key').value.trim();
+  if (!isKeyValid(apiKey)) { alert('Please add a valid API key in the sidebar.'); return; }
+
+  const recruiterName    = document.getElementById('ol-name')?.value?.trim() || '';
+  const recruiterCompany = document.getElementById('ol-company')?.value?.trim() || document.getElementById('bc-core')?.value?.trim() || '';
+  if (!recruiterName || !recruiterCompany) {
+    const go = confirm('Your recruiter name or company is not set.\n\nClick OK to set them in InMail Settings, or Cancel to generate with placeholders.');
+    if (go) { showOutreachPanel(); return; }
+  }
+  const rName = recruiterName || 'the Recruiter';
+  const rComp = recruiterCompany || 'our company';
+  const jobUrl           = document.getElementById('ol-url')      ? document.getElementById('ol-url').value.trim()      || '[job URL]'     : '[job URL]';
+  const location         = document.getElementById('ol-location')  ? document.getElementById('ol-location').value.trim() || 'not specified' : 'not specified';
+
+  // Show a loading bubble in chat
+  const container = document.getElementById('chat-container');
+  const loadDiv = document.createElement('div');
+  loadDiv.className = 'msg ai';
+  loadDiv.innerHTML = '<div class="avatar">🤖</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div> <span style="font-size:0.8rem;color:var(--text-muted);">Generating LinkedIn InMail…</span></div>';
+  container.appendChild(loadDiv);
+  container.scrollTop = container.scrollHeight;
+
+  const jdBlock  = jd  ? '\n\nJOB DESCRIPTION:\n' + jd  : '';
+  const cvBlock  = resumeText ? '\n\nCANDIDATE RESUME:\n' + resumeText.slice(0, 2000) : '';
+
+  const prompt =
+    'You are an expert LinkedIn recruiter. Generate a personalised LinkedIn InMail for this candidate.\n' +
+    'RECRUITER: ' + rName + ', part of the Talent Acquisition team at ' + rComp + '\n' +
+    'JOB URL: ' + jobUrl + '\n' +
+    'LOCATION: ' + location +
+    jdBlock + cvBlock + '\n\n' +
+    'STRICT STRUCTURE — follow EXACTLY:\n\n' +
+    'Hi {firstName},\n\n' +
+    'I\'m ' + recruiterName + ', part of the Talent Acquisition team at ' + recruiterCompany + '. I hope you\'re doing well.\n\n' +
+    '[2 sentences: what the team is building + role requirements]\n\n' +
+    'Role details: ' + jobUrl + ' — [contract type from JD or "Full-time permanent"]\n\n' +
+    '[1 soft CTA sentence]\n\n' +
+    'Best Regards,\n' +
+    rName + '\n\n' +
+    'RULES:\n' +
+    '- 80–120 words total\n' +
+    '- Tie 1 hook to something specific in their resume/background\n' +
+    '- BANNED: "exciting opportunity", "I came across your profile", "hope this finds you well", "passionate"\n' +
+    '- Use \\n\\n between paragraphs\n' +
+    '- Sign-off MUST be on separate lines: blank line, then "Best Regards,", then "' + recruiterName + '" on its own line\n\n' +
+    'Return ONLY the message text. No JSON. No subject line. No preamble.';
+
+  try {
+    const reply = await callAISimple(prompt, 400, 0.75);
+    loadDiv.remove();
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'msg ai';
+    msgDiv.innerHTML =
+      '<div class="avatar">🤖</div>' +
+      '<div class="bubble">' +
+      '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--accent);margin-bottom:10px;">💼 LinkedIn InMail — Generated</div>' +
+      '<pre style="font-family:Outfit,sans-serif;font-size:0.84rem;line-height:1.8;white-space:pre-wrap;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;margin:0;">' +
+      reply.replace(/</g,'&lt;').replace(/>/g,'&gt;') +
+      '</pre>' +
+      '<div style="margin-top:10px;display:flex;gap:8px;">' +
+      '<button class="psa-btn psa-blue" onclick="navigator.clipboard.writeText(this.closest(\'.bubble\').querySelector(\'pre\').textContent)">📋 Copy</button>' +
+      '<button class="psa-btn" style="background:rgba(67,97,238,0.08);border:1px solid rgba(67,97,238,0.2);color:var(--accent);" onclick="showOutreachPanel();switchOutreachTab(\'linkedin\')">🔧 Open InMail Builder</button>' +
+      '</div>' +
+      '</div>';
+    container.appendChild(msgDiv);
+    container.scrollTop = container.scrollHeight;
+  } catch(err) {
+    loadDiv.innerHTML = '<div class="avatar">🤖</div><div class="bubble" style="color:var(--danger);">⚠️ Error generating InMail: ' + (err.message||'unknown') + '</div>';
+  }
+}
+
+async function generateInlineOutreachEmail(resumeText, jd) {
+  const apiKey = document.getElementById('api-key').value.trim();
+  if (!isKeyValid(apiKey)) { alert('Please add a valid API key in the sidebar.'); return; }
+
+  const recruiterName    = document.getElementById('ol-name')?.value?.trim() || '';
+  const recruiterCompany = document.getElementById('ol-company')?.value?.trim() || document.getElementById('bc-core')?.value?.trim() || '';
+  const rName = recruiterName || 'the Recruiter';
+  const rComp = recruiterCompany || 'our company';
+
+  const container = document.getElementById('chat-container');
+  const loadDiv = document.createElement('div');
+  loadDiv.className = 'msg ai';
+  loadDiv.innerHTML = '<div class="avatar">🤖</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div> <span style="font-size:0.8rem;color:var(--text-muted);">Generating outreach email…</span></div>';
+  container.appendChild(loadDiv);
+  container.scrollTop = container.scrollHeight;
+
+  const jdBlock = jd         ? '\n\nJOB DESCRIPTION:\n' + jd                       : '';
+  const cvBlock = resumeText ? '\n\nCANDIDATE RESUME:\n' + resumeText.slice(0, 2000) : '';
+
+  const prompt =
+    'You are an expert recruiter. Write a warm, personalised outreach email (200–250 words) for this candidate.\n' +
+    'RECRUITER: ' + rName + ', part of the Talent Acquisition team at ' + rComp +
+    jdBlock + cvBlock + '\n\n' +
+    'STRUCTURE:\n' +
+    'Subject: [compelling subject line]\n\n' +
+    'Hi [FirstName],\n\n' +
+    '[Opening: reference 1 specific thing from their background — a company, achievement, or technology]\n\n' +
+    '[Body: 2–3 sentences on the role, what makes it interesting, why it fits them]\n\n' +
+    '[CTA: soft, low pressure — ask if they are open to a quick chat]\n\n' +
+    'Best Regards,\n' +
+    rName + '\n' +
+    rComp + '\n\n' +
+    'RULES:\n' +
+    '- Warm, human tone — not corporate\n' +
+    '- 1 specific hook from their resume/profile\n' +
+    '- BANNED: "exciting opportunity", "hope this finds you well", "passionate", "fast-paced"\n' +
+    '- Sign-off MUST be: blank line, "Best Regards,", then "' + recruiterName + '" on its own line, then "' + recruiterCompany + '" on its own line\n\n' +
+    'Return ONLY the email. No preamble.';
+
+  try {
+    const reply = await callAISimple(prompt, 500, 0.75);
+    loadDiv.remove();
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'msg ai';
+    msgDiv.innerHTML =
+      '<div class="avatar">🤖</div>' +
+      '<div class="bubble">' +
+      '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--success);margin-bottom:10px;">✉️ Personal Outreach Email — Generated</div>' +
+      '<pre style="font-family:Outfit,sans-serif;font-size:0.84rem;line-height:1.8;white-space:pre-wrap;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;margin:0;">' +
+      reply.replace(/</g,'&lt;').replace(/>/g,'&gt;') +
+      '</pre>' +
+      '<div style="margin-top:10px;display:flex;gap:8px;">' +
+      '<button class="psa-btn psa-green" onclick="navigator.clipboard.writeText(this.closest(\'.bubble\').querySelector(\'pre\').textContent)">📋 Copy</button>' +
+      '<button class="psa-btn" style="background:rgba(5,118,66,0.06);border:1px solid rgba(5,118,66,0.2);color:var(--success);" onclick="showOutreachPanel();switchOutreachTab(\'personal\')">🔧 Open Outreach Builder</button>' +
+      '</div>' +
+      '</div>';
+    container.appendChild(msgDiv);
+    container.scrollTop = container.scrollHeight;
+  } catch(err) {
+    loadDiv.innerHTML = '<div class="avatar">🤖</div><div class="bubble" style="color:var(--danger);">⚠️ Error generating outreach: ' + (err.message||'unknown') + '</div>';
+  }
+}
+// ══════════════════════════════════════════════════════
+// END INLINE OUTREACH GENERATION
+// ══════════════════════════════════════════════════════
+
 function checkKey() {
   const key  = document.getElementById('api-key').value.trim();
   const dot  = document.getElementById('status-dot');
@@ -4906,8 +5324,14 @@ function formatAI(text) {
 }
 
 async function sendMessage() {
+  // L-08: disable button immediately to prevent double-submit
+  const sendBtnEl = document.getElementById('send-btn');
+  if (sendBtnEl) sendBtnEl.disabled = true;
   const apiKey = document.getElementById('api-key').value.trim();
-  if (!isKeyValid(apiKey) || isLoading) return;
+  if (!isKeyValid(apiKey) || isLoading) {
+    if (sendBtnEl && isKeyValid(apiKey)) sendBtnEl.disabled = false;
+    return;
+  }
   const input = document.getElementById('user-input');
   const userText = input.value.trim();
   if (!userText) return;
@@ -5075,11 +5499,11 @@ async function runPostScreeningAction(action, encodedResume, encodedJD) {
   const jd     = decodeURIComponent(encodedJD);
 
   if (action === 'outreach-personal') {
-    launchOutreachForCandidate(encodedResume, encodedJD);
+    generateInlineOutreachEmail(resume, jd);
     return;
   }
   if (action === 'outreach-linkedin') {
-    showOutreachPanel(); switchOutreachTab('linkedin');
+    generateInlineInMail(resume, jd, encodedResume, encodedJD);
     return;
   }
 
@@ -5358,8 +5782,21 @@ function showOutreachPanel() {
   document.getElementById('input-area').style.display = 'none';
   document.getElementById('battle-panel').classList.remove('visible');
   document.getElementById('context-panel').classList.remove('visible');
+  // B-03: hide pitch + dashboard panels
+  const pp = document.getElementById('pitch-panel'); if (pp) pp.classList.remove('visible');
+  const dp = document.getElementById('dashboard-panel'); if (dp) dp.classList.remove('visible');
   document.getElementById('outreach-panel').style.display = 'flex';
   currentMode = null;
+  // Sync company from bc-core if ol-company is blank
+  const olComp = document.getElementById('ol-company');
+  const bcCore = document.getElementById('bc-core');
+  if (olComp && !olComp.value.trim() && bcCore && bcCore.value.trim()) {
+    olComp.value = bcCore.value.trim();
+  }
+  // Sync API key
+  const sideKey = document.getElementById('api-key').value.trim();
+  const olKey = document.getElementById('ol-groq-key');
+  if (olKey && isKeyValid(sideKey) && !olKey.value.trim()) olKey.value = sideKey;
   // default to linkedin tab
   switchOutreachTab('linkedin');
 }
@@ -5453,7 +5890,13 @@ function olToggle(id) {
 }
 
 function olMsgCard(id, icon, badge, bCls, title, subj, body) {
-  const bf = (body||'').replace(/\\n/g, '\n');
+  let bf = (body||'').replace(/\\n/g, '\n');
+  // Normalise sign-off: "Best Regards, Name" or "Best Regards,Name" → separate lines
+  // Ensure sign-off is always on separate lines (run AFTER all \n conversions)
+  bf = bf.replace(/Best Regards,[ \t]*(\S[^\n]*)/g, 'Best Regards,\n$1');
+  bf = bf.replace(/Best regards,[ \t]*(\S[^\n]*)/g, 'Best Regards,\n$1');
+  // Ensure blank line before Best Regards
+  bf = bf.replace(/([^\n])\nBest Regards,/g, '$1\n\nBest Regards,');
   return `<div class="ol-msg-card">
     <div class="ol-msg-hdr" onclick="olToggle('${id}')">
       <span>${icon}</span>
@@ -5479,7 +5922,13 @@ function olMsgCard(id, icon, badge, bCls, title, subj, body) {
 }
 
 function renderVariantPreview(v, idx) {
-  const bf = (v.body || '').replace(/\\n/g, '\n');
+  let bf = (v.body || '').replace(/\\n/g, '\n');
+  // Normalise sign-off
+  // Ensure sign-off is always on separate lines (run AFTER all \n conversions)
+  bf = bf.replace(/Best Regards,[ \t]*(\S[^\n]*)/g, 'Best Regards,\n$1');
+  bf = bf.replace(/Best regards,[ \t]*(\S[^\n]*)/g, 'Best Regards,\n$1');
+  // Ensure blank line before Best Regards
+  bf = bf.replace(/([^\n])\nBest Regards,/g, '$1\n\nBest Regards,');
   const fullMsg = bf;
   const copyAll = (v.subject ? 'Subject: ' + v.subject + '\n\n' : '') + bf;
   return '<div style="padding:0;">'
@@ -5531,7 +5980,7 @@ async function olGenerateEnriched() {
   const name     = document.getElementById('ol-name').value.trim() || 'Recruiter';
   const location = document.getElementById('ol-location').value.trim() || '';
   const sample   = document.getElementById('ol-sample').value.trim();
-  const groqKey  = document.getElementById('ol-groq-key').value.trim();
+  const groqKey  = document.getElementById('ol-groq-key').value.trim() || document.getElementById('api-key').value.trim();
   const ctaNow   = olCTA;
   const fuNow    = olFU;
 
@@ -5591,9 +6040,9 @@ async function olGenerateEnriched() {
   if (fuNow>=3) fuSchema+=',"followUp3":{"subject":"string","body":"string"}';
 
   let fuInstr='';
-  if (fuNow===1) fuInstr='"followUp": 55-70 words. Warm, references first message, adds ONE new angle. Include job URL. End: Best Regards, / '+name+'.';
-  else if (fuNow===2) fuInstr='"followUp" (55-70w warm) and "followUp2" (45-60w more direct). Both include job URL. End: Best Regards, / '+name+'.';
-  else fuInstr='"followUp" (55-70w), "followUp2" (45-60w), "followUp3" (35-50w final nudge). All include job URL. End: Best Regards, / '+name+'.';
+  if (fuNow===1) fuInstr='"followUp": 55-70 words. Start: Hi {firstName}, — Warm, references first message, adds ONE new angle. Include job URL. Sign-off MUST be on separate lines: \\n\\nBest Regards,\\n'+name+'';
+  else if (fuNow===2) fuInstr='"followUp" (55-70w) and "followUp2" (45-60w more direct). Both start with Hi {firstName}, include job URL. Sign-off each: \\n\\nBest Regards,\\n'+name+'';
+  else fuInstr='"followUp" (55-70w), "followUp2" (45-60w), "followUp3" (35-50w). All start with Hi {firstName}, include job URL. Sign-off each: \\n\\nBest Regards,\\n'+name+'.';
 
   const sampleBlock = sample ? 'STYLE REFERENCE (match this tone exactly):\n"""\n'+sample+'\n"""\n' : '';
 
@@ -5612,7 +6061,7 @@ async function olGenerateEnriched() {
     +'Vary location detail or add specific angle. Max 12 words each.\n\n';
   const p6 = 'MESSAGE STRUCTURE (follow EXACTLY):\n\n'
     +'Hi {firstName},\n\n'
-    +'[Intro: "I am '+name+', [recruiter title matching function at '+companyName+']. I hope you are doing well."]\n\n'
+    +'[Intro: "I am '+name+', part of the Talent Acquisition team at '+companyName+'. I hope you are doing well."]\n\n'
     +'[HOOK PARAGRAPH - this is the key differentiator. 2 sentences. Make it feel written specifically for someone with their background.\n'
     +'Variant A = TECH HOOK: reference the specific challenge ('+coreChallenge+') — frame it as a problem only deep experts can solve\n'
     +'Variant B = IMPACT HOOK: paint the measurable impact and what success looks like 12 months in\n'
@@ -5620,14 +6069,19 @@ async function olGenerateEnriched() {
     +'We are looking for a '+roleTitle+' with deep expertise in '+keySkills+'.\n\n'
     +'Role details: '+url+' - '+contractType+'\n\n'
     +'[CTA: '+ctaInstr+']\n\n'
-    +'Best Regards,\n'+name+'\n\n';
+    +'Best Regards,\n'+name+'\n\n'
+    +'CRITICAL: Every variant body MUST end with \\n\\nBest Regards,\\n'+name+'\n\n';
   const p7 = 'RULES:\n'
     +'- Body: 100-130 words total\n'
     +'- BANNED: exciting opportunity, I came across your profile, hope this finds you well, passionate, fast-paced, dynamic, hit the ground running, unique opportunity\n'
     +'- Use \\n\\n between paragraphs\n'
     +'- Tone: peer-to-peer, intelligent, direct\n\n';
   const p8 = 'FOLLOW-UPS:\n'+fuInstr+'\n'
-    +'Structure: Hi {firstName}, / reference original / ONE new insight / job URL / soft CTA / blank line / Best Regards, / '+name+'\n\n';
+    +'Follow-up body MUST follow this EXACT structure:\n'+
+    'Hi {firstName},\n\n'+
+'[1 sentence referencing previous message] + [ONE new angle not in first message] + [job URL] + [soft CTA]\n\n'+
+'Best Regards,\n'+name+'\n\n'+
+'CRITICAL: Best Regards and recruiter name MUST be on separate lines — never on the same line.';
   const p9 = 'Return ONLY valid JSON, no markdown:\n'
     +'{"subjectLines":["s1","s2","s3","s4"],"outreachVariants":[{"label":"Tech Hook","subject":"string","body":"string"},{"label":"Impact Hook","subject":"string","body":"string"},{"label":"Growth Hook","subject":"string","body":"string"}],"followUp":{"subject":"string","body":"string"}'+fuSchema+'}';
 
@@ -5705,7 +6159,7 @@ async function olGenerate() {
   const url = document.getElementById('ol-url').value.trim();
   const sample = document.getElementById('ol-sample').value.trim();
   const name = document.getElementById('ol-name').value.trim() || 'Recruiter';
-  const groqKey = document.getElementById('ol-groq-key').value.trim();
+  const groqKey = document.getElementById('ol-groq-key').value.trim() || document.getElementById('api-key').value.trim();
 
   document.getElementById('ol-error').style.display = 'none';
   if (!jd) { const e = document.getElementById('ol-error'); e.textContent = '⚠️ Please paste the Job Description.'; e.style.display = 'block'; return; }
@@ -5743,9 +6197,9 @@ async function olGenerate() {
   if (fuNow >= 3) fuSchema += ',"followUp3":{"subject":"string","body":"string"}';
 
   let fuInstr = '';
-  if (fuNow===1) fuInstr = '1 follow-up "followUp": 60-80 words, warm, polite, includes job URL, ends with Best regards / '+name+'.';
-  else if (fuNow===2) fuInstr = '"followUp" (60-80 words, warm, includes job URL) and "followUp2" (50-70 words, slightly more direct, includes job URL). Both end with Best regards / '+name+'.';
-  else fuInstr = '"followUp" (60-80w warm), "followUp2" (50-70w more direct), "followUp3" (40-60w final nudge). All include job URL, end with Best regards / '+name+'.';
+  if (fuNow===1) fuInstr = '"followUp": 60-80 words. Start Hi {firstName}, — warm, references first outreach, adds ONE new angle, includes job URL. Sign-off MUST be on 2 separate lines: \\n\\nBest Regards,\\n'+name+'';
+  else if (fuNow===2) fuInstr = '"followUp" (60-80w warm) and "followUp2" (50-70w more direct). Both start Hi {firstName},, include job URL. Sign-off each: \\n\\nBest Regards,\\n'+name+'';
+  else fuInstr = '"followUp" (60-80w), "followUp2" (50-70w), "followUp3" (40-60w final nudge). All start Hi {firstName},, include job URL. Sign-off each: \\n\\nBest Regards,\\n'+name+'.';
 
   const sampleBlock = sample
     ? 'Style reference:\n"""\n'+sample+'\n"""\n'
@@ -5783,7 +6237,7 @@ The message body MUST follow this EXACT structure — no deviations:
 
 Line 1:  Hi {firstName},
 Line 2:  (blank)
-Line 3:  [1 sentence: "I'm [name], the [recruiter title] for [function/team] at [company]."] — use specific recruiter title matching the role (e.g. Lead Talent Sourcer for Technical roles, Senior Recruiter for Product roles). Add "I hope you're doing well."
+Line 3:  [1 sentence: "I'm [name], part of the Talent Acquisition team at [company]."] — then add "I hope you're doing well." on the same line.
 Line 4:  (blank)
 Line 5:  [1–2 sentences describing what the company/team is building RIGHT NOW — extract this directly from the JD. Be specific: mention the actual product, mission, platform or technology being built.]
 Line 6:  [1 sentence: "We're looking for a [Exact Role Title] with strong expertise in [2–3 specific skills/technologies from JD]."]
@@ -5793,7 +6247,7 @@ Line 9:  (blank)
 Line 10: [CTA sentence — soft, no pressure. Example: "Let me know if this sounds interesting to you — I'd be happy to connect and share more details."]
 Line 11: (blank)
 Line 12: Best Regards,
-Line 13: ${name}
+Line 13: [name] (recruiter's name only — NOT 'Recruiter', use the actual name value)
 
 RULES:
 - Total body length: 80–120 words. SHORT and direct.
@@ -5803,6 +6257,7 @@ RULES:
 - Subject line MUST include company name + exact role title + location
 - Tone: warm, professional, peer-to-peer — like a message from a real person, not a template
 - Use \\n\\n between paragraphs in the body
+- The body MUST end with: \\n\\nBest Regards,\\n[name] — this is MANDATORY on every variant, every time
 
 GENERATE EXACTLY 3 VARIANTS — same structure, different angle in lines 5–6:
 - Variant A "Product & Scale Focus": emphasis on the product/platform being built and scale
@@ -5819,7 +6274,9 @@ ${fuInstr}
 - Reference that you reached out before + add ONE new angle not in the first message
 - Keep it short: 50–70 words
 - Include job URL: ${url}
-- End with blank line, then "Best Regards,", then "${name}"
+- Sign-off MUST be on separate lines exactly like this:
+  \n\nBest Regards,\n${name}
+- NEVER write "Best Regards, ${name}" on a single line
 
 Return ONLY raw valid JSON — no markdown, no preamble:
 {"subjectLines":["s1","s2","s3","s4"],"outreachVariants":[{"label":"Product & Scale Focus","subject":"string","body":"string"},{"label":"Technical Challenge Focus","subject":"string","body":"string"},{"label":"Mission & Impact Focus","subject":"string","body":"string"}],"followUp":{"subject":"string","body":"string"}${fuSchema}}
@@ -5892,7 +6349,15 @@ function olReset() {
   document.getElementById('ol-jd').value = '';
   document.getElementById('ol-url').value = '';
   document.getElementById('ol-sample').value = '';
+  document.getElementById('ol-location').value = '';
+  // M-03: reset additional fields and state
+  const nameEl = document.getElementById('ol-name'); if (nameEl) nameEl.value = '';
+  const keyEl  = document.getElementById('ol-groq-key'); if (keyEl) keyEl.value = '';
   olSetCTA('cv'); olSetFU(1);
+  window._olVariants = [];
+  const vp = document.getElementById('ol-variant-preview'); if (vp) vp.innerHTML = '';
+  window.personalHistory = [];
+  const pc = document.getElementById('personal-chat'); if (pc) pc.innerHTML = '';
   document.getElementById('ol-results').style.display = 'none';
   document.getElementById('ol-error').style.display = 'none';
   document.getElementById('ol-db-company-wrap').style.display = 'none';
@@ -5936,6 +6401,12 @@ function usePersonalChip(text) {
   autoResize(document.getElementById('personal-input'));
 }
 
+function updatePersonalSendBtn() {
+  const btn = document.getElementById('personal-send-btn');
+  const txt = document.getElementById('personal-input');
+  const key = document.getElementById('api-key').value.trim();
+  if (btn && txt) btn.disabled = !txt.value.trim() || !isKeyValid(key);
+}
 function personalHandleKey(e) {
   if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendPersonalMessage(); }
 }
