@@ -704,6 +704,7 @@ battle-config { grid-template-columns: 1fr; }
       <label>🔑 API Provider</label>
       <select id="provider-select" onchange="onProviderChange()" style="width:100%;background:white;border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;color:#111827;font-family:'Outfit',sans-serif;font-size:0.8rem;outline:none;margin-bottom:7px;cursor:pointer;">
         <option value="groq">⚡ Groq — Llama 3.3 (Free)</option>
+        <option value="openrouter">🔀 OpenRouter — Auto (Free)</option>
         <option value="gemini">🌟 Google Gemini 2.0 (Free)</option>
         <option value="openai">🤖 OpenAI — GPT-4o</option>
         <option value="anthropic">🧠 Anthropic — Claude</option>
@@ -888,13 +889,7 @@ battle-config { grid-template-columns: 1fr; }
             <span style="background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:0.72rem;color:#374151;">🎯 Talent & Skills Analysis</span>
           </div>
           <p style="font-size:0.75rem;color:var(--text-muted);margin-top:8px;">CSV · XLSX · PDF · DOCX · PPTX · JSON · TXT — single or multiple files</p>
-          <div style="margin-top:16px;padding-top:14px;border-top:1px dashed rgba(67,97,238,0.2);">
-            <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;">— or try without uploading —</p>
-            <button onclick="loadDemoData()" style="background:linear-gradient(135deg,#f77f00,#f4a261);color:white;border:none;border-radius:10px;padding:9px 22px;font-family:inherit;font-size:0.83rem;font-weight:700;cursor:pointer;box-shadow:0 2px 10px rgba(247,127,0,0.3);">
-              🎯 Load Demo Dataset
-            </button>
-            <p style="font-size:0.69rem;color:var(--text-muted);margin-top:6px;">50 sample candidates · 8 pre-built charts · no API key needed</p>
-          </div>
+
         </div>
       </div>
 
@@ -1999,7 +1994,232 @@ const WORLD_LOCATIONS = [
   // 🇲🇦 Morocco
   "Morocco","Casablanca, Morocco","Rabat, Morocco",
   // 🇪🇺 Europe (general)
-  "Europe","Western Europe","Eastern Europe","EMEA","APAC","LATAM","North America","South America","Southeast Asia","Middle East","Africa"
+  // 🇬🇧 United Kingdom (expanded)
+  "United Kingdom","England, UK","Scotland, UK","Wales, UK","Northern Ireland, UK",
+  "London, UK","Manchester, UK","Birmingham, UK","Edinburgh, UK","Glasgow, UK","Leeds, UK","Bristol, UK","Sheffield, UK","Liverpool, UK","Cambridge, UK","Oxford, UK","Reading, UK","Nottingham, UK","Cardiff, UK","Belfast, UK","Newcastle, UK","Brighton, UK","Coventry, UK","Leicester, UK","Exeter, UK","Southampton, UK","Portsmouth, UK","Plymouth, UK","Milton Keynes, UK","Derby, UK","Stoke-on-Trent, UK","Wolverhampton, UK","Sunderland, UK","Middlesbrough, UK","Aberdeen, UK","Dundee, UK","Swansea, UK","Inverness, UK","Bath, UK","York, UK","Chester, UK","Warwick, UK","Guildford, UK",
+  // 🇮🇳 India (more cities)
+  "India","Bengaluru, India","Bangalore, India","Mumbai, India","Delhi, India","New Delhi, India","Noida, India","Gurugram, India","Gurgaon, India","Hyderabad, India","Chennai, India","Pune, India","Kolkata, India","Ahmedabad, India","Jaipur, India","Chandigarh, India","Kochi, India","Coimbatore, India","Indore, India","Bhopal, India","Lucknow, India","Nagpur, India","Surat, India","Vadodara, India","Visakhapatnam, India","Thiruvananthapuram, India","Mysuru, India","Hubli, India","Mohali, India","Manesar, India","Whitefield, India","Electronic City, India","Navi Mumbai, India","Thane, India","Goa, India","Bhubaneswar, India","Patna, India","Ranchi, India","Raipur, India",
+  // 🇺🇸 USA
+  "USA","San Francisco, USA","San Francisco Bay Area, USA","San Jose, USA","Palo Alto, USA","Mountain View, USA","Menlo Park, USA","Sunnyvale, USA","Santa Clara, USA","Oakland, USA","New York City, USA","NYC, USA","Manhattan, NY, USA","Brooklyn, NY, USA","Seattle, USA","Bellevue, WA, USA","Redmond, WA, USA","Austin, TX, USA","Dallas, TX, USA","Houston, TX, USA","Boston, MA, USA","Cambridge, MA, USA","Chicago, IL, USA","Los Angeles, CA, USA","San Diego, CA, USA","Denver, CO, USA","Atlanta, GA, USA","Miami, FL, USA","Orlando, FL, USA","Washington DC, USA","Raleigh, NC, USA","Charlotte, NC, USA","Nashville, TN, USA","Phoenix, AZ, USA","Minneapolis, MN, USA","Detroit, MI, USA","Portland, OR, USA","Salt Lake City, UT, USA","Las Vegas, NV, USA","Pittsburgh, PA, USA","Philadelphia, PA, USA","Columbus, OH, USA","Indianapolis, IN, USA","Kansas City, MO, USA","St. Louis, MO, USA","Baltimore, MD, USA","Tampa, FL, USA","Sacramento, CA, USA","San Antonio, TX, USA","Louisville, KY, USA","Richmond, VA, USA","Raleigh-Durham, NC, USA",
+  // 🇨🇦 Canada
+  "Canada","Toronto, Canada","Vancouver, Canada","Montreal, Canada","Calgary, Canada","Ottawa, Canada","Edmonton, Canada","Waterloo, Canada","Quebec City, Canada","Halifax, Canada","Winnipeg, Canada","Victoria, Canada","Mississauga, Canada","Brampton, Canada","Markham, Canada","Kitchener, Canada",
+  // 🇦🇺 Australia
+  "Australia","Sydney, Australia","Melbourne, Australia","Brisbane, Australia","Perth, Australia","Adelaide, Australia","Canberra, Australia","Gold Coast, Australia","Newcastle, Australia","Geelong, Australia","Hobart, Australia","Darwin, Australia",
+  // 🇩🇪 Germany
+  "Germany","Berlin, Germany","Munich, Germany","Hamburg, Germany","Frankfurt, Germany","Cologne, Germany","Stuttgart, Germany","Düsseldorf, Germany","Dortmund, Germany","Leipzig, Germany","Nuremberg, Germany","Dresden, Germany","Hannover, Germany","Bremen, Germany","Karlsruhe, Germany","Bonn, Germany","Mannheim, Germany","Wiesbaden, Germany",
+  // 🇫🇷 France
+  "France","Paris, France","Lyon, France","Marseille, France","Toulouse, France","Bordeaux, France","Nantes, France","Strasbourg, France","Lille, France","Nice, France","Rennes, France","Grenoble, France","Montpellier, France","Sophia Antipolis, France",
+  // 🇳🇱 Netherlands
+  "Netherlands","Amsterdam, Netherlands","Rotterdam, Netherlands","The Hague, Netherlands","Utrecht, Netherlands","Eindhoven, Netherlands","Delft, Netherlands","Leiden, Netherlands","Groningen, Netherlands",
+  // 🇸🇬 Singapore
+  "Singapore",
+  // 🇯🇵 Japan
+  "Japan","Tokyo, Japan","Osaka, Japan","Kyoto, Japan","Yokohama, Japan","Nagoya, Japan","Fukuoka, Japan","Sapporo, Japan","Kobe, Japan","Hiroshima, Japan","Sendai, Japan","Tsukuba, Japan",
+  // 🇨🇳 China
+  "China","Beijing, China","Shanghai, China","Shenzhen, China","Guangzhou, China","Hangzhou, China","Chengdu, China","Wuhan, China","Xi'an, China","Nanjing, China","Suzhou, China","Chongqing, China","Tianjin, China","Zhengzhou, China","Qingdao, China","Dongguan, China","Foshan, China","Wenzhou, China","Ningbo, China",
+  // 🇰🇷 South Korea
+  "South Korea","Seoul, South Korea","Busan, South Korea","Incheon, South Korea","Daejeon, South Korea","Daegu, South Korea","Gwangju, South Korea","Suwon, South Korea","Seongnam, South Korea",
+  // 🇦🇪 UAE
+  "UAE","Dubai, UAE","Abu Dhabi, UAE","Sharjah, UAE","Ajman, UAE","Ras Al Khaimah, UAE",
+  // 🇸🇦 Saudi Arabia
+  "Saudi Arabia","Riyadh, Saudi Arabia","Jeddah, Saudi Arabia","Dammam, Saudi Arabia","Dhahran, Saudi Arabia","Mecca, Saudi Arabia","Medina, Saudi Arabia","Khobar, Saudi Arabia",
+  // 🇮🇱 Israel
+  "Israel","Tel Aviv, Israel","Jerusalem, Israel","Haifa, Israel","Herzliya, Israel","Ra'anana, Israel","Petah Tikva, Israel","Beersheba, Israel","Rehovot, Israel",
+  // 🇸🇪 Sweden
+  "Sweden","Stockholm, Sweden","Gothenburg, Sweden","Malmö, Sweden","Uppsala, Sweden","Linköping, Sweden","Lund, Sweden",
+  // 🇩🇰 Denmark
+  "Denmark","Copenhagen, Denmark","Aarhus, Denmark","Odense, Denmark",
+  // 🇫🇮 Finland
+  "Finland","Helsinki, Finland","Tampere, Finland","Espoo, Finland","Oulu, Finland","Turku, Finland",
+  // 🇳🇴 Norway
+  "Norway","Oslo, Norway","Bergen, Norway","Trondheim, Norway","Stavanger, Norway",
+  // 🇨🇭 Switzerland
+  "Switzerland","Zurich, Switzerland","Geneva, Switzerland","Basel, Switzerland","Bern, Switzerland","Lausanne, Switzerland","Zug, Switzerland",
+  // 🇦🇹 Austria
+  "Austria","Vienna, Austria","Graz, Austria","Linz, Austria","Salzburg, Austria","Innsbruck, Austria",
+  // 🇧🇪 Belgium
+  "Belgium","Brussels, Belgium","Antwerp, Belgium","Ghent, Belgium","Leuven, Belgium","Bruges, Belgium","Liège, Belgium",
+  // 🇵🇱 Poland
+  "Poland","Warsaw, Poland","Krakow, Poland","Wroclaw, Poland","Poznan, Poland","Gdansk, Poland","Katowice, Poland","Lodz, Poland",
+  // 🇨🇿 Czech Republic
+  "Czech Republic","Prague, Czech Republic","Brno, Czech Republic","Ostrava, Czech Republic",
+  // 🇷🇴 Romania
+  "Romania","Bucharest, Romania","Cluj-Napoca, Romania","Timisoara, Romania","Iasi, Romania","Brasov, Romania",
+  // 🇵🇹 Portugal
+  "Portugal","Lisbon, Portugal","Porto, Portugal","Braga, Portugal","Coimbra, Portugal",
+  // 🇪🇸 Spain
+  "Spain","Madrid, Spain","Barcelona, Spain","Valencia, Spain","Seville, Spain","Bilbao, Spain","Malaga, Spain","Zaragoza, Spain","Seville, Spain","Alicante, Spain",
+  // 🇮🇹 Italy
+  "Italy","Milan, Italy","Rome, Italy","Turin, Italy","Bologna, Italy","Florence, Italy","Naples, Italy","Genoa, Italy","Venice, Italy","Padua, Italy","Trieste, Italy",
+  // 🇧🇷 Brazil
+  "Brazil","São Paulo, Brazil","Rio de Janeiro, Brazil","Belo Horizonte, Brazil","Curitiba, Brazil","Porto Alegre, Brazil","Brasília, Brazil","Recife, Brazil","Fortaleza, Brazil","Campinas, Brazil",
+  // 🇲🇽 Mexico
+  "Mexico","Mexico City, Mexico","Guadalajara, Mexico","Monterrey, Mexico","Querétaro, Mexico","Tijuana, Mexico",
+  // 🇦🇷 Argentina
+  "Argentina","Buenos Aires, Argentina","Córdoba, Argentina","Rosario, Argentina","Mendoza, Argentina",
+  // 🇨🇴 Colombia
+  "Colombia","Bogotá, Colombia","Medellín, Colombia","Cali, Colombia","Barranquilla, Colombia",
+  // 🇨🇱 Chile
+  "Chile","Santiago, Chile","Valparaíso, Chile",
+  // 🇵🇪 Peru
+  "Peru","Lima, Peru",
+  // 🇺🇾 Uruguay
+  "Uruguay","Montevideo, Uruguay",
+  // 🇿🇦 South Africa
+  "South Africa","Johannesburg, South Africa","Cape Town, South Africa","Durban, South Africa","Pretoria, South Africa","Sandton, South Africa",
+  // 🇳🇬 Nigeria
+  "Nigeria","Lagos, Nigeria","Abuja, Nigeria","Ibadan, Nigeria","Port Harcourt, Nigeria",
+  // 🇰🇪 Kenya
+  "Kenya","Nairobi, Kenya","Mombasa, Kenya",
+  // 🇪🇬 Egypt
+  "Egypt","Cairo, Egypt","Alexandria, Egypt","Giza, Egypt",
+  // 🇲🇦 Morocco
+  "Morocco","Casablanca, Morocco","Rabat, Morocco","Marrakech, Morocco","Fes, Morocco",
+  // 🇹🇳 Tunisia
+  "Tunisia","Tunis, Tunisia",
+  // 🇬🇭 Ghana
+  "Ghana","Accra, Ghana",
+  // 🇷🇼 Rwanda
+  "Rwanda","Kigali, Rwanda",
+  // 🇸🇳 Senegal
+  "Senegal","Dakar, Senegal",
+  // 🇹🇷 Turkey
+  "Turkey","Istanbul, Turkey","Ankara, Turkey","Izmir, Turkey","Bursa, Turkey","Antalya, Turkey",
+  // 🇷🇺 Russia
+  "Russia","Moscow, Russia","Saint Petersburg, Russia","Novosibirsk, Russia","Yekaterinburg, Russia","Kazan, Russia",
+  // 🇺🇦 Ukraine
+  "Ukraine","Kyiv, Ukraine","Lviv, Ukraine","Kharkiv, Ukraine","Dnipro, Ukraine",
+  // 🇮🇩 Indonesia
+  "Indonesia","Jakarta, Indonesia","Bali, Indonesia","Surabaya, Indonesia","Bandung, Indonesia","Yogyakarta, Indonesia","Medan, Indonesia","Makassar, Indonesia",
+  // 🇲🇾 Malaysia
+  "Malaysia","Kuala Lumpur, Malaysia","Penang, Malaysia","Johor Bahru, Malaysia","Cyberjaya, Malaysia","Petaling Jaya, Malaysia","Kota Kinabalu, Malaysia",
+  // 🇹🇭 Thailand
+  "Thailand","Bangkok, Thailand","Chiang Mai, Thailand","Phuket, Thailand","Chonburi, Thailand",
+  // 🇵🇭 Philippines
+  "Philippines","Manila, Philippines","Cebu, Philippines","Davao, Philippines","Quezon City, Philippines","Makati, Philippines","Taguig, Philippines",
+  // 🇻🇳 Vietnam
+  "Vietnam","Ho Chi Minh City, Vietnam","Hanoi, Vietnam","Da Nang, Vietnam","Hoi An, Vietnam",
+  // 🇳🇿 New Zealand
+  "New Zealand","Auckland, New Zealand","Wellington, New Zealand","Christchurch, New Zealand","Hamilton, New Zealand","Dunedin, New Zealand",
+  // 🇭🇰 Hong Kong
+  "Hong Kong",
+  // 🇹🇼 Taiwan
+  "Taiwan","Taipei, Taiwan","Hsinchu, Taiwan","Taichung, Taiwan","Tainan, Taiwan","Kaohsiung, Taiwan",
+  // 🇧🇩 Bangladesh
+  "Bangladesh","Dhaka, Bangladesh","Chittagong, Bangladesh","Sylhet, Bangladesh",
+  // 🇵🇰 Pakistan
+  "Pakistan","Karachi, Pakistan","Lahore, Pakistan","Islamabad, Pakistan","Rawalpindi, Pakistan","Faisalabad, Pakistan",
+  // 🇱🇰 Sri Lanka
+  "Sri Lanka","Colombo, Sri Lanka","Kandy, Sri Lanka",
+  // 🇳🇵 Nepal
+  "Nepal","Kathmandu, Nepal","Pokhara, Nepal",
+  // 🇦🇫 Afghanistan
+  "Afghanistan","Kabul, Afghanistan",
+  // 🇰🇿 Kazakhstan
+  "Kazakhstan","Almaty, Kazakhstan","Astana, Kazakhstan","Nur-Sultan, Kazakhstan",
+  // 🇺🇿 Uzbekistan
+  "Uzbekistan","Tashkent, Uzbekistan","Samarkand, Uzbekistan",
+  // 🇦🇿 Azerbaijan
+  "Azerbaijan","Baku, Azerbaijan",
+  // 🇬🇪 Georgia
+  "Georgia","Tbilisi, Georgia","Batumi, Georgia",
+  // 🇦🇲 Armenia
+  "Armenia","Yerevan, Armenia",
+  // 🇲🇳 Mongolia
+  "Mongolia","Ulaanbaatar, Mongolia",
+  // 🇲🇲 Myanmar
+  "Myanmar","Yangon, Myanmar","Mandalay, Myanmar",
+  // 🇰🇭 Cambodia
+  "Cambodia","Phnom Penh, Cambodia","Siem Reap, Cambodia",
+  // 🇱🇦 Laos
+  "Laos","Vientiane, Laos",
+  // 🇧🇳 Brunei
+  "Brunei","Bandar Seri Begawan, Brunei",
+  // 🇬🇷 Greece
+  "Greece","Athens, Greece","Thessaloniki, Greece","Patras, Greece",
+  // 🇭🇷 Croatia
+  "Croatia","Zagreb, Croatia","Split, Croatia",
+  // 🇸🇰 Slovakia
+  "Slovakia","Bratislava, Slovakia","Košice, Slovakia",
+  // 🇭🇺 Hungary
+  "Hungary","Budapest, Hungary","Debrecen, Hungary",
+  // 🇧🇬 Bulgaria
+  "Bulgaria","Sofia, Bulgaria","Plovdiv, Bulgaria","Varna, Bulgaria",
+  // 🇮🇪 Ireland
+  "Ireland","Dublin, Ireland","Cork, Ireland","Galway, Ireland","Limerick, Ireland",
+  // 🇶🇦 Qatar
+  "Qatar","Doha, Qatar",
+  // 🇰🇼 Kuwait
+  "Kuwait","Kuwait City, Kuwait",
+  // 🇧🇭 Bahrain
+  "Bahrain","Manama, Bahrain",
+  // 🇴🇲 Oman
+  "Oman","Muscat, Oman","Salalah, Oman",
+  // 🇾🇪 Yemen
+  "Yemen","Sanaa, Yemen","Aden, Yemen",
+  // 🇮🇶 Iraq
+  "Iraq","Baghdad, Iraq","Erbil, Iraq","Basra, Iraq",
+  // 🇮🇷 Iran
+  "Iran","Tehran, Iran","Isfahan, Iran","Mashhad, Iran","Shiraz, Iran",
+  // 🇯🇴 Jordan
+  "Jordan","Amman, Jordan","Aqaba, Jordan",
+  // 🇱🇧 Lebanon
+  "Lebanon","Beirut, Lebanon",
+  // 🇸🇾 Syria
+  "Syria","Damascus, Syria",
+  // 🇱🇾 Libya
+  "Libya","Tripoli, Libya",
+  // 🇸🇩 Sudan
+  "Sudan","Khartoum, Sudan",
+  // 🇪🇹 Ethiopia
+  "Ethiopia","Addis Ababa, Ethiopia",
+  // 🇹🇿 Tanzania
+  "Tanzania","Dar es Salaam, Tanzania","Nairobi, Tanzania",
+  // 🇺🇬 Uganda
+  "Uganda","Kampala, Uganda",
+  // 🇿🇲 Zambia
+  "Zambia","Lusaka, Zambia",
+  // 🇿🇼 Zimbabwe
+  "Zimbabwe","Harare, Zimbabwe",
+  // 🇨🇮 Ivory Coast
+  "Ivory Coast","Abidjan, Ivory Coast",
+  // 🇨🇲 Cameroon
+  "Cameroon","Douala, Cameroon","Yaoundé, Cameroon",
+  // 🇱🇺 Luxembourg
+  "Luxembourg","Luxembourg City, Luxembourg",
+  // 🇲🇹 Malta
+  "Malta","Valletta, Malta","Sliema, Malta",
+  // 🇨🇾 Cyprus
+  "Cyprus","Nicosia, Cyprus","Limassol, Cyprus",
+  // 🇦🇱 Albania
+  "Albania","Tirana, Albania",
+  // 🇷🇸 Serbia
+  "Serbia","Belgrade, Serbia","Novi Sad, Serbia",
+  // 🇧🇦 Bosnia
+  "Bosnia and Herzegovina","Sarajevo, Bosnia and Herzegovina",
+  // 🇲🇰 North Macedonia
+  "North Macedonia","Skopje, North Macedonia",
+  // 🇸🇮 Slovenia
+  "Slovenia","Ljubljana, Slovenia",
+  // 🇪🇪 Estonia
+  "Estonia","Tallinn, Estonia","Tartu, Estonia",
+  // 🇱🇻 Latvia
+  "Latvia","Riga, Latvia",
+  // 🇱🇹 Lithuania
+  "Lithuania","Vilnius, Lithuania","Kaunas, Lithuania",
+  // 🇧🇾 Belarus
+  "Belarus","Minsk, Belarus",
+  // 🇲🇩 Moldova
+  "Moldova","Chisinau, Moldova",
+  // 🇦🇩 Andorra
+  "Andorra",
+  // 🇲🇨 Monaco
+  "Monaco",
+  // 🇸🇲 San Marino
+  "San Marino",
+  // Regions
+  "Europe","Western Europe","Eastern Europe","Central Europe","Northern Europe","Southern Europe",
+  "EMEA","APAC","LATAM","North America","South America","Southeast Asia","South Asia","East Asia","Central Asia","Middle East","Africa","Sub-Saharan Africa","North Africa","West Africa","East Africa","Southern Africa","Oceania","Global"
 ];
 
 let regionHighlight = -1;
@@ -2543,7 +2763,7 @@ h1{font-size:1.4rem;font-weight:800;color:#1e293b;margin-bottom:2px;}
 .g2{grid-template-columns:1fr 1fr;}.g3{grid-template-columns:1fr 1fr 1fr;}.g13{grid-template-columns:1fr 3fr;}.g31{grid-template-columns:3fr 1fr;}
 .card{background:white;border-radius:12px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
 .card h3{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:#4361ee;border-bottom:2px solid #e0e7ff;padding-bottom:6px;margin-bottom:14px;}
-.chart-wrap{position:relative;height:220px;}
+.chart-wrap{position:relative;height:200px;max-height:200px;}
 .caption{font-size:11px;color:#94a3b8;margin-top:8px;font-style:italic;}
 table{width:100%;border-collapse:collapse;font-size:12.5px;}
 th{background:#f8fafc;padding:7px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;text-align:left;font-weight:700;color:#64748b;border-bottom:2px solid #e2e8f0;}
@@ -2648,7 +2868,7 @@ function buildDemoTalentIntelligence() {
   </div>
   <div class="card">
     <h3>Experience Band Distribution</h3>
-    <div style="position:relative;height:190px;"><canvas id="ti4"></canvas></div>
+    <div style="position:relative;height:185px;"><canvas id="ti4"></canvas></div>
     <p class="caption">Mid-level talent (3-8 years) forms the bulk of the pipeline. Senior profiles (9+) are scarce and highly contested.</p>
   </div>
 </div>
@@ -2848,7 +3068,7 @@ function buildDemoCharts() {
 
 <div class="card" style="margin-bottom:16px;">
   <h3>Chart 1 — Hiring Volume Trend (Applications vs Hires by Month)</h3>
-  <div style="height:240px;position:relative;"><canvas id="ch1"></canvas></div>
+  <div style="height:200px;position:relative;"><canvas id="ch1"></canvas></div>
   <p class="caption">Applications peaked in March-April. Hire rate stayed consistent ~${Math.round(hired.length/rows.length*100)}% throughout the period with no significant seasonality detected.</p>
 </div>
 
@@ -2931,12 +3151,12 @@ function buildDemoCorrelation() {
 </div>
 
 <div class="grid g2">
-  <div class="card"><h3>Scatter 1 — Experience vs Time-to-Hire</h3><div style="height:240px;position:relative;"><canvas id="co1"></canvas></div><p class="caption">Positive trend (r=+0.41): each extra year of experience adds ~1.8 days to the hiring cycle. Senior roles involve more interview rounds.</p></div>
-  <div class="card"><h3>Scatter 2 — Interview Score vs Salary Offered</h3><div style="height:240px;position:relative;"><canvas id="co2"></canvas></div><p class="caption">Strong positive correlation (r=+0.72): candidates scoring 85+ earn ~18% more than those scoring 70-80. Scoring rubric is well-calibrated.</p></div>
+  <div class="card"><h3>Scatter 1 — Experience vs Time-to-Hire</h3><div style="height:200px;position:relative;"><canvas id="co1"></canvas></div><p class="caption">Positive trend (r=+0.41): each extra year of experience adds ~1.8 days to the hiring cycle. Senior roles involve more interview rounds.</p></div>
+  <div class="card"><h3>Scatter 2 — Interview Score vs Salary Offered</h3><div style="height:200px;position:relative;"><canvas id="co2"></canvas></div><p class="caption">Strong positive correlation (r=+0.72): candidates scoring 85+ earn ~18% more than those scoring 70-80. Scoring rubric is well-calibrated.</p></div>
 </div>
 
 <div class="grid g2">
-  <div class="card"><h3>Scatter 3 — Interview Score vs Time-to-Hire</h3><div style="height:240px;position:relative;"><canvas id="co3"></canvas></div><p class="caption">Slight negative trend (r=-0.29): top scorers get hired faster. When a candidate clearly stands out, decision speed improves by 15-20%.</p></div>
+  <div class="card"><h3>Scatter 3 — Interview Score vs Time-to-Hire</h3><div style="height:200px;position:relative;"><canvas id="co3"></canvas></div><p class="caption">Slight negative trend (r=-0.29): top scorers get hired faster. When a candidate clearly stands out, decision speed improves by 15-20%.</p></div>
   <div class="card"><h3>Heatmap — Variable Correlation Matrix</h3>
     <div style="overflow-x:auto;margin-top:4px;">
     <table style="font-size:11px;">
@@ -3355,7 +3575,7 @@ function buildDemoTime() {
 </div>
 
 <div class="card" style="margin-bottom:16px;"><h3>TTH Distribution Histogram</h3>
-  <div style="height:240px;position:relative;"><canvas id="tt1"></canvas></div>
+  <div style="height:200px;position:relative;"><canvas id="tt1"></canvas></div>
   <p class="caption">Distribution peaks at 26-30 days. ${binV[5]} hires breached the 40-day mark — these are candidates to investigate for process delay.</p>
 </div>
 
@@ -4280,7 +4500,7 @@ async function renderDashboard(systemPrompt, type) {
     let _hint='';
     if(/fetch|network|failed|cors/i.test(_msg)) _hint='<br><br>Fix: "Failed to fetch" = CORS block when opening file:// locally. Host on GitHub Pages or run a local server. Or switch to Gemini which handles CORS better.';
     else if(/401|invalid|unauthori/i.test(_msg)) _hint='<br><br>Fix: API key invalid. Check sidebar.';
-    else if(/429|quota|rate/i.test(_msg)) _hint='<br><br>Fix: Rate limit. Wait 30s and retry.';
+    else if(/429|quota|rate/i.test(_msg)) _hint='<br><br>Fix: Quota exceeded or no credits. Top up at platform.openai.com/billing, or switch to Groq (free) in the sidebar.';
     content.innerHTML = `<div class="dash-result-box" style="border-color:rgba(229,56,59,0.3);background:rgba(229,56,59,0.05);padding:20px;">
       <b style="color:var(--danger);font-size:0.95rem;">Error</b><br><br>
       <code style="font-family:monospace;font-size:0.82rem;">${_msg}</code>
@@ -4345,45 +4565,31 @@ function parseDashResponse(reply, type, label) {
       'th{background:#f8fafc;padding:10px 14px;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#64748b;border-bottom:2px solid #e2e8f0;white-space:nowrap;text-align:left;}' +
       'td{padding:9px 14px;font-size:0.83rem;color:#1e293b;border-bottom:1px solid #f1f5f9;vertical-align:middle;}' +
       'tr:hover td{background:#f8fafc;}' +
+      '.chart-wrap{position:relative!important;height:200px!important;max-height:200px!important;}' +
+      'canvas{max-height:200px!important;}' +
+      'div[style*="height:240px"]{height:200px!important;max-height:200px!important;}' +
+      'div[style*="height:180px"]{height:180px!important;max-height:180px!important;}' +
+      'div[style*="height:190px"]{height:185px!important;max-height:185px!important;}' +
+      'div[style*="height:160px"]{height:160px!important;max-height:160px!important;}' +
+      '.card{overflow:hidden;}' +
       '</style>';
     dashHtml = dashHtml.replace('</head>', tableFixCss + '</head>');
-    storeDashHtml(type, dashHtml);
+
+    // Inject chart editor toolbar into iframe
+    var _ceScript = '<scr'+'ipt>\n' + '(function(){\n  var PAL={\n    "Default":["#4361ee","#f72585","#f77f00","#06b6d4","#0a9c5a","#7209b7","#e5383b","#ffd166","#06d6a0","#118ab2"],\n    "Ocean":["#0077b6","#00b4d8","#90e0ef","#023e8a","#0096c7","#48cae4","#ade8f4","#3a86ff","#1a759f","#168aad"],\n    "Sunset":["#ff6b6b","#ffa07a","#ffd700","#ff8c00","#dc143c","#ff4500","#ff6347","#ff7f50","#ff69b4","#db7093"],\n    "Forest":["#2d6a4f","#40916c","#52b788","#74c69d","#95d5b2","#1b4332","#52796f","#84a98c","#cad2c5","#354f52"],\n    "Mono":["#1a1a2e","#16213e","#0f3460","#533483","#e94560","#8d99ae","#2b2d42","#ef233c","#d90429","#edf2f4"],\n    "Pastel":["#ffd6e0","#ffb3c1","#ff85a1","#c9b1ff","#a8dadc","#b5ead7","#ffdac1","#e2f0cb","#c7ceea","#ffc8dd"],\n    "Bold":["#e63946","#2a9d8f","#e9c46a","#264653","#f4a261","#457b9d","#1d3557","#a8dadc","#f1faee","#e76f51"]\n  };\n  var R={};\n\n  function mkTb(id){\n    var ch=R[id]; if(!ch||ch._tb) return;\n    var cv=document.getElementById(id); if(!cv) return;\n    var wrap=cv.parentElement; if(!wrap||wrap.dataset.ce) return;\n    wrap.dataset.ce="1"; wrap.style.position="relative";\n    var tb=document.createElement("div");\n    tb.style.cssText="display:flex;align-items:center;gap:5px;padding:4px 7px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:7px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:5px;flex-wrap:wrap;";\n    var lbl=document.createElement("span"); lbl.textContent="📊 Type:";\n    lbl.style.cssText="font-size:10px;color:#94a3b8;font-weight:600;";\n    tb.appendChild(lbl);\n    var sel=document.createElement("select");\n    sel.style.cssText="font-size:11px;padding:2px 5px;border:1px solid #e2e8f0;border-radius:5px;background:white;color:#1e293b;cursor:pointer;";\n    [["bar","Bar"],["horizontalBar","H-Bar"],["line","Line"],["doughnut","Donut"],["pie","Pie"],["radar","Radar"],["polarArea","Polar"]].forEach(function(t){\n      var o=document.createElement("option"); o.value=t[0]; o.textContent=t[1];\n      var cur=ch.type; if(cur==="bar"&&ch.opts&&ch.opts.indexAxis==="y") cur="horizontalBar";\n      if(t[0]===cur) o.selected=true; sel.appendChild(o);\n    });\n    sel.onchange=function(){ chType(id,sel.value); };\n    tb.appendChild(sel);\n    var pl=document.createElement("span"); pl.textContent=" 🎨";\n    pl.style.cssText="font-size:12px;";\n    var ps=document.createElement("select");\n    ps.style.cssText="font-size:11px;padding:2px 5px;border:1px solid #e2e8f0;border-radius:5px;background:white;color:#1e293b;cursor:pointer;";\n    Object.keys(PAL).forEach(function(n){ var o=document.createElement("option"); o.value=n; o.textContent=n; if(n==="Default") o.selected=true; ps.appendChild(o); });\n    ps.onchange=function(){ applyPal(id,ps.value); };\n    tb.appendChild(pl); tb.appendChild(ps);\n    wrap.insertBefore(tb,wrap.firstChild); ch._tb=tb;\n  }\n\n  function applyPal(id,nm){\n    var ch=R[id]; if(!ch) return;\n    var pal=PAL[nm]||PAL["Default"]; ch.currentPal=nm;\n    ch.inst.data.datasets.forEach(function(ds,i){\n      if(Array.isArray(ds.backgroundColor)&&ds.backgroundColor.length>1) ds.backgroundColor=pal.slice(0,ds.backgroundColor.length);\n      else{ ds.backgroundColor=pal[i%pal.length]; if(ds.borderColor&&ds.borderColor!=="transparent") ds.borderColor=pal[i%pal.length]; }\n    }); ch.inst.update();\n  }\n\n  function chType(id,nt){\n    var ch=R[id]; if(!ch) return;\n    ch.inst.destroy();\n    var cv=document.getElementById(id); if(!cv) return;\n    var at=nt==="horizontalBar"?"bar":nt;\n    var no=JSON.parse(JSON.stringify(ch.opts||{}));\n    if(nt==="horizontalBar") no.indexAxis="y"; else delete no.indexAxis;\n    var flat=at==="doughnut"||at==="pie"||at==="radar"||at==="polarArea";\n    ch.inst=new Chart(cv.getContext("2d"),{type:at,data:{labels:ch.labels,datasets:ch.datasets},\n      options:Object.assign({responsive:true,maintainAspectRatio:false,\n        plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:12}}},\n        scales:flat?{}:{y:{beginAtZero:true,ticks:{font:{size:10}}},x:{ticks:{font:{size:10}}}}},no)});\n    ch.type=nt; if(ch.currentPal&&ch.currentPal!=="Default") applyPal(id,ch.currentPal);\n  }\n\n  function hookAll(){\n    if(!window.Chart) return false;\n    // Hook Chart constructor\n    var OC=Chart;\n    window.Chart=function(ctx,cfg){\n      var inst=new OC(ctx,cfg);\n      var id=ctx&&ctx.canvas?ctx.canvas.id:null;\n      if(id){ R[id]={inst:inst,type:cfg.type,labels:(cfg.data&&cfg.data.labels)||[],datasets:(cfg.data&&cfg.data.datasets)||[],opts:{},currentPal:"Default"}; setTimeout(function(){ mkTb(id); },60); }\n      return inst;\n    };\n    Object.assign(window.Chart,OC); window.Chart.prototype=OC.prototype;\n    // Also hook C() helper\n    if(window.C){ var oC=window.C; window.C=function(id,type,labels,datasets,opts){\n      oC(id,type,labels,datasets,opts);\n      var cv=document.getElementById(id); if(!cv) return;\n      var inst=Chart.getChart?Chart.getChart(cv):null;\n      if(inst){ R[id]={inst:inst,type:type,labels:labels,datasets:datasets,opts:opts||{},currentPal:"Default"}; setTimeout(function(){ mkTb(id); },80); }\n    }; }\n    // Scan existing charts\n    setTimeout(function(){\n      document.querySelectorAll("canvas").forEach(function(cv){\n        var id=cv.id; if(!id) return;\n        var inst=Chart.getChart?Chart.getChart(cv):null;\n        if(inst&&!R[id]){ R[id]={inst:inst,type:inst.config.type,labels:inst.data.labels||[],datasets:inst.data.datasets||[],opts:{},currentPal:"Default"}; mkTb(id); }\n        else if(R[id]&&!R[id]._tb) mkTb(id);\n      });\n    },600);\n    return true;\n  }\n  function init(){ if(!hookAll()) setTimeout(init,150); }\n  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",init);\n  else init();\n})();' + '\n<\/scr'+'ipt>';
+    dashHtml = dashHtml.replace('</head>', _ceScript + '</head>');
+
+        storeDashHtml(type, dashHtml);
     const blob = new Blob([dashHtml], { type: 'text/html; charset=utf-8' });
     const url = URL.createObjectURL(blob);
     html += `
       <div class="dash-card" style="padding:0;overflow:hidden;">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1.5px solid var(--border);">
-          <div class="dash-card-title" style="margin:0;">📊 Interactive Dashboard</div>
-          <div style="display:flex;gap:8px;">
-            <button onclick="document.getElementById('dash-iframe-${type}').requestFullscreen()" 
-              style="background:white;border:1.5px solid var(--border);border-radius:6px;padding:4px 10px;font-size:0.72rem;cursor:pointer;font-family:'Outfit',sans-serif;color:var(--text-muted);">⛶ Fullscreen</button>
-            <div style="position:relative;display:inline-block;" id="dl-wrap-${type}">
-              <button onclick="toggleDlMenu('${type}')"
-                style="background:rgba(67,97,238,0.08);border:1.5px solid rgba(67,97,238,0.25);border-radius:6px;padding:4px 10px;font-size:0.72rem;cursor:pointer;font-family:'Outfit',sans-serif;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:4px;">
-                ⬇ Download <span style="font-size:0.6rem;">▼</span>
-              </button>
-              <div id="dl-menu-${type}" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:white;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:999;min-width:160px;overflow:hidden;">
-                <a href="${url}" download="dashboard-${type}.html"
-                  style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:0.78rem;font-weight:600;color:var(--text);text-decoration:none;border-bottom:1px solid var(--border);" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
-                  🌐 HTML Report
-                </a>
-                <button onclick="dashDownloadPDF('${type}')"
-                  style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:0.78rem;font-weight:600;color:var(--text);background:none;border:none;border-bottom:1px solid var(--border);width:100%;cursor:pointer;font-family:'Outfit',sans-serif;text-align:left;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
-                  📄 PDF Report
-                </button>
-                <button onclick="dashDownloadDocx('${type}')"
-                  style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:0.78rem;font-weight:600;color:var(--text);background:none;border:none;border-bottom:1px solid var(--border);width:100%;cursor:pointer;font-family:'Outfit',sans-serif;text-align:left;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
-                  📝 Export (HTML→Doc)
-                </button>
-                <button onclick="dashDownloadPPT('${type}')"
-                  style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:0.78rem;font-weight:600;color:var(--text);background:none;border:none;width:100%;cursor:pointer;font-family:'Outfit',sans-serif;text-align:left;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
-                  🖼️ Slides (Print HTML)
-                </button>
-              </div>
-            </div>
-          </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1.5px solid var(--border);background:#fafbff;">
+          <div class="dash-card-title" style="margin:0;font-size:0.82rem;">📊 Interactive Dashboard</div>
+          <button onclick="document.getElementById('dash-iframe-${type}').requestFullscreen()"
+            style="background:white;border:1.5px solid var(--border);border-radius:6px;padding:3px 10px;font-size:0.72rem;cursor:pointer;font-family:'Outfit',sans-serif;color:var(--text-muted);">⛶ Fullscreen</button>
         </div>
-        <iframe id="dash-iframe-${type}" src="${url}" style="width:100%;height:${type==="talent_intelligence"?"1100":"640"}px;border:none;" sandbox="allow-scripts allow-same-origin"></iframe>
+        <iframe id="dash-iframe-${type}" src="${url}" style="width:100%;height:580px;border:none;" sandbox="allow-scripts allow-same-origin"></iframe>
       </div>`;
   }
 
@@ -4719,6 +4925,15 @@ function generatePrompt() {
     'Data Recency: ' + freshness,
     usps       ? 'Our Recruitment Edge: ' + usps       : null,
     weaknesses ? 'Areas to Navigate: '    + weaknesses : null,
+    '',
+    '⚠ COUNTRY/REGION MANDATE: All intelligence MUST be specific to "' + region + '". For EVERY competitor and for ' + core + ', include:',
+    '  - Headcount and office presence in ' + region,
+    '  - Local salary/compensation ranges (not just global)',
+    '  - ' + region + '-specific hiring activity, recent layoffs, or expansion signals',
+    '  - Cultural and work-environment factors relevant to ' + region + ' candidates',
+    '  - Local glassdoor/review sentiment where available',
+    '  - Regulatory, visa, or employment law factors relevant in ' + region,
+    '  Do NOT give generic global data when ' + region + '-specific data is available.',
     ''
   ].filter(function(l){ return l !== null; }).join('\n');
 
@@ -4753,6 +4968,7 @@ function generatePrompt() {
       '',
       'RULES:',
       '- Use only public data within ' + freshness,
+      '- ALL data must be specific to ' + region + ' where possible (salaries, hiring, office presence)',
       '- Cite only if non-obvious (inline [source])',
       '- Mark unavailable data as "Insufficient public data"',
       '- Tone: direct, actionable, peer-to-peer'
@@ -4808,6 +5024,7 @@ function generatePrompt() {
       '',
       'RULES:',
       '- ' + freshness + ' data only',
+      '- All compensation, headcount, and hiring data must be specific to ' + region,
       '- Cite non-obvious claims',
       '- Honest, no hallucinations',
       usps       ? '- Our USPs to weave in: ' + usps       : null,
@@ -6578,7 +6795,7 @@ async function testConnection() {
     let hint='';
     if(/fetch|network|failed|cors/i.test(msg)) hint='<br><small>Fix: Open via GitHub Pages or a local server, not file:// directly.</small>';
     else if(/401|invalid|unauthori/i.test(msg)) hint='<br><small>Fix: API key is wrong. Double-check it.</small>';
-    else if(/429|quota|rate/i.test(msg)) hint='<br><small>Fix: Rate limit hit. Wait 30s and retry.</small>';
+    else if(/429|quota|rate/i.test(msg)) hint='<br><small>Fix: Quota exceeded or no credits. Top up at platform.openai.com/billing, or switch to Groq (free) in the sidebar.</small>';
     statusEl.style.display='block'; statusEl.style.background='rgba(229,56,59,0.08)';
     statusEl.style.border='1px solid rgba(229,56,59,0.3)'; statusEl.style.color='#c0392b';
     statusEl.innerHTML='<b>Error:</b> '+msg+hint;
@@ -6931,6 +7148,11 @@ const PROVIDERS = {
     name: 'Mistral', placeholder: 'Paste key...', free: true,
     hint: 'Free tier · <a href="https://console.mistral.ai" target="_blank">Get key →</a>',
     validate: k => k.length > 20
+  },
+  openrouter: {
+    name: 'OpenRouter', placeholder: 'sk-or-v1-...', free: true,
+    hint: 'Free · Auto-picks best live model · <a href="https://openrouter.ai/keys" target="_blank">Get free key →</a>',
+    validate: k => k.length > 20
   }
 };
 
@@ -6958,7 +7180,8 @@ async function callAI(systemPrompt, messages, maxTokens=2000) {
     case 'gemini':    return await callGemini(apiKey, systemPrompt, messages, maxTokens);
     case 'openai':    return await callOpenAI(apiKey, systemPrompt, messages, maxTokens);
     case 'anthropic': return await callAnthropic(apiKey, systemPrompt, messages, maxTokens);
-    case 'mistral':   return await callMistral(apiKey, systemPrompt, messages, maxTokens);
+    case 'mistral':      return await callMistral(apiKey, systemPrompt, messages, maxTokens);
+    case 'openrouter':   return await callOpenRouter(apiKey, systemPrompt, messages, maxTokens);
     default: throw new Error('Unknown provider: ' + provider);
   }
 }
@@ -7074,6 +7297,58 @@ async function callMistral(apiKey, systemPrompt, messages, maxTokens=2000) {
     },
     'openai'
   );
+}
+
+// ── OPENROUTER ──
+async function callOpenRouter(apiKey, systemPrompt, messages, maxTokens=2000) {
+  if (!apiKey) throw new Error('No API key. Add your OpenRouter key in the sidebar (free at openrouter.ai).');
+  // Confirmed working free models as of March 2026 (in priority order)
+  // Using openrouter/auto first — lets OpenRouter pick best available model live
+  const FREE_MODELS = [
+    'openrouter/auto',
+    'meta-llama/llama-4-maverick:free',
+    'meta-llama/llama-4-scout:free',
+    'meta-llama/llama-3.3-70b-instruct:free',
+    'google/gemini-2.5-pro-exp-03-25:free',
+    'mistralai/mistral-small-3.1-24b-instruct:free',
+    'deepseek/deepseek-chat-v3-0324:free',
+    'deepseek/deepseek-r1-zero:free',
+    'google/gemma-3-27b-it:free',
+    'nvidia/llama-3.1-nemotron-nano-8b-v1:free',
+  ];
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + apiKey,
+    'HTTP-Referer': 'https://recruiter-ai.app',
+    'X-Title': 'RecruiterAI',
+  };
+  let lastErr = null;
+  for (const model of FREE_MODELS) {
+    try {
+      const result = await apiFetch(
+        'https://openrouter.ai/api/v1/chat/completions',
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            model,
+            max_tokens: maxTokens,
+            messages: [{role:'system', content:systemPrompt}, ...messages]
+          })
+        },
+        'openai'
+      );
+      return result;
+    } catch(e) {
+      lastErr = e;
+      const msg = (e.message || '').toLowerCase();
+      // Stop immediately on auth errors
+      if (msg.includes('401') || msg.includes('403') || msg.includes('invalid key') || msg.includes('unauthorized')) throw e;
+      // Try next model for any other error (no endpoints, provider error, rate limit etc.)
+      continue;
+    }
+  }
+  throw new Error('OpenRouter: all free models unavailable right now. This is an OpenRouter issue — try again in a minute, or switch to Groq (free) in the sidebar.');
 }
 
 
@@ -8390,6 +8665,14 @@ function ptSetActive(id) {
   var arr = loadProjects();
   var p = arr.find(function(x) { return x.id === id; });
   if (p) ptShowMsg('pt-projects-msg', '', true); // clear any previous
+  // Execute any pending dashboard save
+  if (window._pendingDashSave) {
+    var ps = window._pendingDashSave;
+    window._pendingDashSave = null;
+    // Update button label
+    if (ps.btn) ps.btn.innerHTML = '💾 Save to Project <span style="font-size:0.65rem;opacity:.75;">(' + (p ? p.name.slice(0,22) : '') + ')</span>';
+    ptSaveDashToProject(ps.type, ps.label, ps.analysisText, ps.dashHtml, ps.btn);
+  }
 }
 
 function ptEsc(s) {
@@ -8905,81 +9188,94 @@ function dashRenderActionBar(type, label, analysisText, dashHtml) {
   var content = document.getElementById('dash-content');
   if (!content) return;
 
-  // Remove stale bar from a previous run
   var old = document.getElementById('dash-action-bar');
   if (old) old.parentNode.removeChild(old);
 
   var bar = document.createElement('div');
   bar.id = 'dash-action-bar';
 
-  // Determine active project for Save button label
+  // ── Save to Project ──────────────────────────────────────────
   var hasProject = !!(appState && appState.activeProjectId);
-  var projLabel  = '';
+  var projLabel = '';
   if (hasProject) {
     var _arr = loadProjects();
     var _proj = _arr.find(function(p) { return p.id === appState.activeProjectId; });
     projLabel = _proj ? ' (' + _proj.name.slice(0, 22) + (_proj.name.length > 22 ? '…' : '') + ')' : '';
   }
-
-  // ── Save to Project ────────────────────────────────────────────
   var saveBtn = document.createElement('button');
   saveBtn.className = 'dash-persist-btn save';
-  saveBtn.innerHTML = '💾 Save to Project' + (hasProject ? '<span style="font-size:0.65rem;opacity:.75;">' + ptEsc(projLabel) + '</span>' : '');
-  if (!hasProject) {
-    saveBtn.disabled = true;
-    saveBtn.title = 'Create or select a project first (📁 Projects)';
-  } else {
-    saveBtn.onclick = function() {
+  saveBtn.innerHTML = '💾 Save to Project' + (hasProject ? '<span style="font-size:0.65rem;opacity:.75;">' + ptEsc(projLabel) + '</span>' : ' <span style="font-size:0.65rem;opacity:.7;">(select project first)</span>');
+  saveBtn.onclick = function() {
+    if (!appState.activeProjectId) {
+      ptOpen(); ptTab('new');
+      var st = document.getElementById('status-text');
+      if (st) { st.textContent = '⚠ Create or select a project, then click Save again'; setTimeout(function(){ st.textContent=''; }, 3500); }
+      window._pendingDashSave = { type: type, label: label, analysisText: analysisText, dashHtml: dashHtml, btn: saveBtn };
+    } else {
       ptSaveDashToProject(type, label, analysisText, dashHtml, saveBtn);
-    };
-  }
+    }
+  };
 
-  // ── Download HTML ──────────────────────────────────────────────
+  // ── Download dropdown ────────────────────────────────────────
+  var dlWrap = document.createElement('div');
+  dlWrap.style.cssText = 'position:relative;display:inline-block;';
+
   var dlBtn = document.createElement('button');
   dlBtn.className = 'dash-persist-btn dl';
-  dlBtn.innerHTML = '⬇️ Download HTML';
-  if (!dashHtml) {
-    dlBtn.disabled = true;
-    dlBtn.title = 'No dashboard HTML available';
-  } else {
-    dlBtn.onclick = function() {
-      var blob = new Blob([dashHtml], { type: 'text/html; charset=utf-8' });
-      var a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'dashboard-' + type + '-' + new Date().toISOString().slice(0, 10) + '.html';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(function() { URL.revokeObjectURL(a.href); }, 2000);
-    };
-  }
+  dlBtn.innerHTML = '⬇️ Download <span style="font-size:0.6rem;margin-left:2px;">▼</span>';
+  dlBtn.disabled = !dashHtml;
 
-  // ── Print ──────────────────────────────────────────────────────
-  var printBtn = document.createElement('button');
-  printBtn.className = 'dash-persist-btn print';
-  printBtn.innerHTML = '🖨 Print';
-  if (!dashHtml) {
-    printBtn.disabled = true;
-    printBtn.title = 'No dashboard HTML available';
-  } else {
-    printBtn.onclick = function() {
-      var pw = window.open('', '_blank', 'width=1100,height=750');
-      if (!pw) { alert('Allow pop-ups to use Print.'); return; }
-      pw.document.open();
-      pw.document.write(dashHtml);
-      pw.document.close();
-      pw.onload = function() { pw.focus(); pw.print(); };
-    };
-  }
+  var dlMenu = document.createElement('div');
+  dlMenu.style.cssText = 'display:none;position:absolute;bottom:calc(100% + 6px);left:0;background:white;border:1.5px solid #e2e8f0;border-radius:12px;box-shadow:0 8px 28px rgba(67,97,238,0.16);z-index:9999;min-width:185px;overflow:hidden;';
 
-  // ── Timestamp label ────────────────────────────────────────────
+  var dlItems = [
+    { icon:'🌐', label:'HTML Report',    sub:'Full interactive dashboard', fn: function() {
+        var blob = new Blob([dashHtml], {type:'text/html;charset=utf-8'});
+        var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = 'dashboard-'+type+'-'+new Date().toISOString().slice(0,10)+'.html';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+    }},
+    { icon:'📄', label:'PDF',           sub:'Print / Save as PDF', fn: function() { dashDownloadPDF(type); }},
+    { icon:'📝', label:'DOCX',          sub:'Opens in Word / Docs', fn: function() { dashDownloadDocx(type); }},
+    { icon:'🖼️', label:'PPTX',          sub:'PowerPoint slides', fn: function() { dashDownloadPPT(type); }},
+    { icon:'📋', label:'TXT',           sub:'Plain text export', fn: function() {
+        var txt = (analysisText || '').replace(/<[^>]+>/g,'');
+        var blob = new Blob([txt || 'No text analysis available.'], {type:'text/plain'});
+        var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = 'dashboard-'+type+'-'+new Date().toISOString().slice(0,10)+'.txt';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }},
+  ];
+
+  dlItems.forEach(function(item, i) {
+    var btn = document.createElement('button');
+    btn.style.cssText = 'width:100%;padding:9px 14px;border:none;'+(i<dlItems.length-1?'border-bottom:1px solid #f1f5f9;':'')+'background:transparent;color:#1e293b;font-family:Outfit,sans-serif;font-size:0.78rem;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;';
+    btn.innerHTML = '<span style="font-size:1rem;">'+item.icon+'</span><span><strong>'+item.label+'</strong><br><span style="font-size:0.68rem;color:#94a3b8;">'+item.sub+'</span></span>';
+    btn.onmouseover = function(){ this.style.background='#f8fafc'; };
+    btn.onmouseout  = function(){ this.style.background='transparent'; };
+    btn.onclick = function() { dlMenu.style.display='none'; item.fn(); };
+    dlMenu.appendChild(btn);
+  });
+
+  dlBtn.onclick = function() {
+    if (!dashHtml) return;
+    dlMenu.style.display = dlMenu.style.display === 'block' ? 'none' : 'block';
+  };
+  document.addEventListener('click', function(e) {
+    if (!dlWrap.contains(e.target)) dlMenu.style.display = 'none';
+  });
+
+  dlWrap.appendChild(dlBtn);
+  dlWrap.appendChild(dlMenu);
+
+  // ── Timestamp ────────────────────────────────────────────────
   var ts = document.createElement('span');
   ts.id = 'dash-action-ts';
   ts.textContent = label + ' · ' + new Date().toLocaleTimeString(undefined, {hour:'2-digit', minute:'2-digit'});
 
   bar.appendChild(saveBtn);
-  bar.appendChild(dlBtn);
-  bar.appendChild(printBtn);
+  bar.appendChild(dlWrap);
   bar.appendChild(ts);
   content.appendChild(bar);
 }
