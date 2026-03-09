@@ -693,7 +693,6 @@ battle-config { grid-template-columns: 1fr; }
     <button class="mode-btn" onclick="setMode('screen')" id="btn-screen"><span class="icon">📋</span><span>Resume / Batch Screening</span></button>
     <button class="mode-btn" onclick="showOutreachPanel()" id="btn-outreach"><span class="icon">✉️</span><span>Candidate Outreach</span></button>
     <button class="mode-btn" onclick="setMode('search')" id="btn-search"><span class="icon">🔍</span><span>Search String Builder</span></button>
-    <button class="mode-btn" onclick="setMode('interview')" id="btn-interview"><span class="icon">🎯</span><span>Interview Questions</span></button>
     <button class="mode-btn pitch-btn" onclick="showPitchPanel()" id="btn-pitch"><span class="icon">🚀</span><span>Candidate Pitch Builder</span></button>
     <button class="mode-btn" onclick="setMode('jd')" id="btn-jd"><span class="icon">📝</span><span>Write Job Description</span></button>
     <button class="mode-btn" onclick="setMode('general')" id="btn-general"><span class="icon">💬</span><span>General Assistant</span></button>
@@ -730,43 +729,32 @@ battle-config { grid-template-columns: 1fr; }
       </div>
 
       <!-- Resume Group with upload tabs -->
+      <!-- Unified resume uploader — works for 1 or many resumes -->
       <div class="ctx-group" id="ctx-resume-group">
-        <div class="ctx-label">
-          👤 Candidate Resume
-          <div class="upload-tabs">
-            <button class="upload-tab active" onclick="switchResumeTab('paste')" id="tab-paste">Paste</button>
-            <button class="upload-tab" onclick="switchResumeTab('upload')" id="tab-upload">📎 Upload</button>
+        <div class="ctx-label" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;">
+          <span id="resume-group-label">👤 Candidate Resume(s)</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:0.65rem;color:var(--text-muted);" id="batch-count-label"></span>
+            <div class="upload-tabs">
+              <button class="upload-tab active" onclick="switchResumeTab('upload')" id="tab-upload">📎 Upload</button>
+              <button class="upload-tab" onclick="switchResumeTab('paste')" id="tab-paste">✏️ Paste</button>
+            </div>
           </div>
+        </div>
+        <!-- Upload tab (default) -->
+        <div id="resume-upload-panel">
+          <div class="drop-zone" id="batch-drop" onclick="document.getElementById('batch-file-input').click()" ondragover="dzOver(event,'batch-drop')" ondragleave="dzLeave('batch-drop')" ondrop="dzDrop(event,'batch')">
+            <div class="dz-icon">📂</div>
+            <div class="dz-text">Click or drag resume(s) here</div>
+            <div class="dz-sub">PDF, DOCX, TXT — 1 file for single screening, up to 10 for batch</div>
+          </div>
+          <input type="file" id="batch-file-input" accept=".pdf,.docx,.txt,.doc" multiple style="display:none" onchange="handleBatchFiles(this.files)"/>
+          <div class="batch-file-list" id="batch-file-list"></div>
         </div>
         <!-- Paste tab -->
-        <div id="resume-paste-panel">
-          <textarea id="ctx-resume" placeholder="Paste the candidate's resume text..."></textarea>
+        <div id="resume-paste-panel" style="display:none;">
+          <textarea id="ctx-resume" placeholder="Paste one resume here. For multiple candidates, separate each with a line of dashes (---)."></textarea>
         </div>
-        <!-- Upload tab -->
-        <div id="resume-upload-panel" style="display:none;">
-          <div class="drop-zone" id="resume-drop" onclick="document.getElementById('resume-file-input').click()" ondragover="dzOver(event,'resume-drop')" ondragleave="dzLeave('resume-drop')" ondrop="dzDrop(event,'single')">
-            <div class="dz-icon">📄</div>
-            <div class="dz-text">Click or drag resume here</div>
-            <div class="dz-sub">Supports PDF, DOCX, TXT</div>
-          </div>
-          <input type="file" id="resume-file-input" accept=".pdf,.docx,.txt,.doc" style="display:none" onchange="handleResumeFile(this.files[0])"/>
-          <div id="resume-file-status"></div>
-        </div>
-      </div>
-
-      <!-- Batch uploads group (shown only in screen mode with multiple files) -->
-      <div class="ctx-group" id="ctx-batch-group" style="display:none;">
-        <div class="ctx-label">
-          👥 Additional Resumes <span style="font-size:0.62rem;color:var(--accent);">→ Batch mode auto-activates</span>
-          <span style="font-size:0.65rem;color:var(--text-muted);" id="batch-count-label"></span>
-        </div>
-        <div class="drop-zone" id="batch-drop" onclick="document.getElementById('batch-file-input').click()" ondragover="dzOver(event,'batch-drop')" ondragleave="dzLeave('batch-drop')" ondrop="dzDrop(event,'batch')">
-          <div class="dz-icon">📂</div>
-          <div class="dz-text">Click or drag multiple resumes</div>
-          <div class="dz-sub">PDF, DOCX, TXT — up to 10 files</div>
-        </div>
-        <input type="file" id="batch-file-input" accept=".pdf,.docx,.txt,.doc" multiple style="display:none" onchange="handleBatchFiles(this.files)"/>
-        <div class="batch-file-list" id="batch-file-list"></div>
       </div>
     </div>
 
@@ -792,18 +780,6 @@ battle-config { grid-template-columns: 1fr; }
           <div class="wicon">🔍</div>
           <div class="wtitle">Search Strings</div>
           <div class="wdesc">Boolean, X-Ray, GitHub, Scholar & more</div>
-          <div class="wbadge key">Needs API key</div>
-        </div>
-        <div class="wcard" onclick="showOutreachPanel()">
-          <div class="wicon">✉️</div>
-          <div class="wtitle">Outreach</div>
-          <div class="wdesc">Personal email or LinkedIn InMail</div>
-          <div class="wbadge free">LinkedIn = Free</div>
-        </div>
-        <div class="wcard" onclick="promptMode('interview')">
-          <div class="wicon">🎯</div>
-          <div class="wtitle">Interview Qs</div>
-          <div class="wdesc">Technical + behavioral</div>
           <div class="wbadge key">Needs API key</div>
         </div>
         <div class="wcard" onclick="promptMode('jd')">
@@ -1713,24 +1689,97 @@ const MODES = {
   screen: {
     label: '📋 Resume / Batch Screening',
     chips: ['Screen & assess fit', 'Generate outreach for top candidates'],
-    systemPrompt: `You are an expert recruiter assistant. Analyze resumes against a job description and respond in this EXACT format:
+    systemPrompt: `You are a strict, senior executive recruiter. Your job is to protect hiring quality — NOT to find reasons to advance candidates.
+
+═══════════════════════════════════
+PHASE 1 — HARD GATE (run first, deterministic)
+═══════════════════════════════════
+
+STEP A — Extract from JD:
+1. JOB FAMILY / DOMAIN: identify the primary domain (e.g. Software Engineering – Backend, Software Engineering – Frontend, Software Engineering – Mobile, Data Engineering, ML/AI Engineering, Security/GRC/DevSecOps, Product Management, Data Analytics, DevOps/SRE, etc.)
+2. MUST-HAVE SKILLS: list 5–10 non-negotiable technical skills/tools explicitly stated or strongly implied by the JD.
+3. MUST-HAVE EXPERIENCE SIGNALS: required years, required role type, required tech stack.
+4. NON-NEGOTIABLES: identify 1–3 absolute dealbreakers (e.g. "must have written production code", "must hold CISSP", "must have led engineering teams").
+
+STEP B — Extract from Resume:
+1. CANDIDATE'S PRIMARY DOMAIN: what domain does this person actually work in?
+2. MUST-HAVE SKILL MATCHES: for EACH JD must-have skill, find a specific quote/phrase from the resume that proves it. If no evidence → mark as UNMATCHED.
+3. EXPERIENCE SIGNALS: actual years, actual role type, actual tech used.
+
+STEP C — Hard Gate Decision (apply all rules strictly):
+
+RULE 1 — DOMAIN MISMATCH:
+  If candidate's primary domain is DIFFERENT from the JD domain AND candidate lacks at least 60% of JD must-have skills → FAIL GATE → 🔴 NOT A FIT, score ≤ 3.
+  Examples of domain mismatch that ALWAYS fail:
+  - JD = Software Engineer (backend/frontend/mobile/data/ML), Candidate = Security/GRC/Compliance/Risk → NOT A FIT
+  - JD = Security/GRC/DevSecOps, Candidate = Software Engineer with no security experience → NOT A FIT
+  - JD = Data Engineer, Candidate = Business Analyst with no pipeline/ETL experience → NOT A FIT
+
+RULE 2 — NON-NEGOTIABLE MISSING:
+  If ANY single non-negotiable is absent from the resume with zero evidence → FAIL GATE → 🔴 NOT A FIT, score ≤ 3.
+
+RULE 3 — SKILL COVERAGE:
+  Count matched must-have skills (with evidence). If matched < 3 out of 5–10 → FAIL GATE → 🔴 NOT A FIT, score ≤ 3.
+
+RULE 4 — EXPERIENCE GAP:
+  If JD requires X years and candidate has Y years:
+  - Gap 0–2 yrs → minor (does NOT fail gate)
+  - Gap 3–5 yrs → major gap (PARTIAL FIT at best)
+  - Gap > 5 yrs → FAIL GATE → NOT A FIT unless JD explicitly says flexible
+
+RULE 5 — ANTI FALSE-POSITIVE:
+  NEVER count these as matching technical requirements: communication, teamwork, agile, leadership, fast learner, stakeholder management, problem solving.
+  NEVER treat adjacent-domain experience as equivalent (security work ≠ software engineering, BI/reporting ≠ data engineering).
+
+═══════════════════════════════════
+PHASE 2 — SCORING (only if hard gate PASSES)
+═══════════════════════════════════
+
+Verdict mapping:
+- 🔴 NOT A FIT  → hard gate failed. Score 0–3.
+- 🟠 PARTIAL FIT → correct domain, gate passes, but missing 2+ must-haves OR major experience gap (3–5 yrs). Score 4–6.
+- 🟡 GOOD FIT   → correct domain, most must-haves matched with evidence, minor gap (≤2 yrs or 1 non-core skill). Score 7–8.
+- 🟢 STRONG FIT → correct domain, ALL must-haves matched with evidence, experience meets or exceeds JD, strong seniority signal. Score 8–10.
+
+Leadership/Management rule:
+  If title is Director/VP/Head and candidate has NEVER managed other managers → downgrade one level.
+
+Score must align with verdict:
+  STRONG FIT: 8–10 | GOOD FIT: 7–8 | PARTIAL FIT: 4–6 | NOT A FIT: 0–3
+  DO NOT INFLATE. Be conservative.
+
+═══════════════════════════════════
+OUTPUT FORMAT (exact — do not deviate)
+═══════════════════════════════════
 
 ━━━ SCREENING RESULT ━━━
 
+**🔍 Phase 1 — Hard Gate:**
+- JD Domain: [identified domain]
+- Must-Have Skills: [skill1, skill2, skill3 ...]
+- Candidate Domain: [candidate's actual domain]
+- Domain Match: ✅ YES / ❌ NO
+- Skills Matched (with evidence):
+  • [skill]: ✅ "[exact quote from resume]" / ❌ No evidence found
+  • [repeat for each must-have]
+- Skills Coverage: X/Y matched
+- Hard Gate: ✅ PASS / ❌ FAIL — [one-line reason if fail]
+
 **FIT VERDICT:** [ONE of: 🟢 STRONG FIT | 🟡 GOOD FIT | 🟠 PARTIAL FIT | 🔴 NOT A FIT]
 **Match Score:** X/10
-**Fit Reasoning:** 1-2 sentences explaining the verdict.
+**Fit Reasoning:** 1–2 sentences. If NOT A FIT due to domain mismatch, state it explicitly: "This is a [candidate domain] profile being evaluated for a [JD domain] role — domain mismatch."
 
 **✅ Key Strengths:**
-- [strength 1]
-- [strength 2]
-- [strength 3]
+- [strength 1 — must cite evidence from resume]
+- [strength 2 — must cite evidence from resume]
+- [strength 3 — must cite evidence from resume]
 
 **❌ Gaps / Missing:**
-- [gap 1 — Critical OR Nice-to-have]
-- [gap 2 — Critical OR Nice-to-have]
+- [gap 1 — label as CRITICAL or NICE-TO-HAVE]
+- [gap 2 — label as CRITICAL or NICE-TO-HAVE]
 
 **📊 Seniority Match:** [matches / over-qualified / under-qualified] — brief reason
+[If under-qualified]: ⚠️ This candidate does NOT meet the minimum required experience level.
 
 **❓ Top 3 Screening Questions:**
 1. [targeted question]
@@ -1739,19 +1788,19 @@ const MODES = {
 
 ━━━ OUTREACH RECOMMENDATION ━━━
 [If STRONG FIT or GOOD FIT]: ✅ Recommended to reach out. Use the Outreach panel to craft a personalized message.
-[If PARTIAL FIT]: ⚠️ Borderline — consider reaching out only if pipeline is thin.
-[If NOT A FIT]: ❌ Not recommended for outreach for this role.
+[If PARTIAL FIT with minor gap only]: ⚠️ Borderline — consider only if pipeline is thin.
+[If PARTIAL FIT with major gap, or NOT A FIT]: ❌ Not recommended for outreach for this role.
 
 ---
-For BATCH mode (multiple candidates): Repeat the above for each candidate, then add a RANKED SUMMARY TABLE at the end:
+For BATCH mode (multiple candidates): Repeat the full block above for each candidate, then add:
 
-| Rank | Candidate | Verdict | Score | Top Strength | Key Gap | Outreach? |
-|------|-----------|---------|-------|--------------|---------|-----------|
-(sorted best to worst fit)
+| Rank | Candidate | Domain Match | Verdict | Score | Skills Matched | Key Gap | Outreach? |
+|------|-----------|--------------|---------|-------|----------------|---------|-----------|
+(sorted best to worst; strict scoring — never inflate)
 
-Then add: **Recommended for Outreach:** [list names of Strong/Good fit candidates]`,
+**Recommended for Outreach:** [ONLY Strong Fit and Good Fit candidates — no exceptions]`,
     contextGroups: ['jd', 'resume'],
-    placeholder: 'Click "Screen & assess fit" or type your question. Upload 1 resume for single screening, or add more files for batch comparison...'
+    placeholder: 'Click "Screen & assess fit" or type your question. Upload one or multiple resumes — single screening or batch, all in one place.'
   },
   search: {
     label: '🔍 Search String Builder',
@@ -2588,7 +2637,46 @@ DASHBOARD DESIGN STANDARDS:
 - EMOJI / UNICODE RULES:
   * Emojis are ALLOWED and encouraged in headers, KPI labels, section titles
   * Because charset is UTF-8, all emojis will render correctly
-  * Use emojis like: 👥 📊 🎯 ✅ 💡 📈 ⚠️ — they will display perfectly`;
+  * Use emojis like: 👥 📊 🎯 ✅ 💡 📈 ⚠️ — they will display perfectly
+
+DASHBOARD CHART REQUIREMENTS — NON-NEGOTIABLE:
+1) Every analytical section MUST contain at least one chart.
+2) Load Chart.js in <head>: <script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
+3) EVERY canvas element MUST have a unique id: <canvas id="c1"></canvas>
+4) EVERY chart container MUST have explicit height: <div style="position:relative;height:200px;">
+5) Initialize ALL charts at bottom of <body> or inside DOMContentLoaded — NOT inline with HTML.
+6) Minimum charts: 6 per dashboard (8 for Forecast/Correlation/Talent Intelligence).
+7) All charts must use: responsive:true, maintainAspectRatio:false
+8) If a metric is mentioned in text → it MUST appear in a chart.
+9) NEVER use a canvas without an id attribute.
+
+SECTION CHART REQUIREMENTS:
+- Overview: KPI strip + at least 2 charts
+- Funnel: Funnel/horizontal bar visualization
+- Source: Horizontal bar chart
+- Time trend: Line chart
+- Stage breakdown: Stacked bar chart
+- Recruiter performance: Bar or horizontal bar chart
+- Forecast: line chart (projected trend) + skills demand chart + pipeline capacity chart
+Do NOT skip sections. Do NOT collapse multiple metrics into a vague chart. Use REAL extracted data only.
+
+SECTION WRAPPING — MANDATORY FOR ALL DASHBOARDS:
+Every section of the HTML dashboard MUST be wrapped in a <section> tag like this:
+  <section class="dash-sec" data-sec-id="SECTION_ID" data-sec-title="Section Title">
+    ...all HTML for this section...
+  </section>
+Use these data-sec-id values (use the closest match, or invent a short slug for custom sections):
+  kpi-strip | hiring-volume | pipeline-funnel | top-sources | roles-table | skills | geography |
+  strategic-callouts | stage-conversion | tth-distribution | tth-by-role | stage-duration |
+  tth-trend | sla-table | acceleration | representation | pipeline-parity | rep-trend |
+  intersectionality | sourcing-audit | findings | correlation-heatmap | top-correlations |
+  scatter-plots | business-implications | warnings | dataset-health | numeric-fields |
+  categorical-fields | distributions | missing-data | outliers | funnel-overview | funnel-kpi |
+  drop-off | funnel-segments | recommendations | forecast-assumptions | volume-forecast |
+  skills-forecast | capacity-forecast | risk-scenarios | employers-table | skills-landscape |
+  experience-seniority | compensation | hiring-trends | strategic-intelligence
+If data for a section is missing: still output the <section> wrapper with a placeholder card inside.
+NEVER omit the <section class="dash-sec"> wrapper for any section.`;
 
 // ── DEMO MODE ──────────────────────────────────────────────────
 const DEMO_CSV = `id,candidate_name,role,department,source,applied_date,status,stage,days_to_hire,location,experience_years,skills,salary_offered,gender,interview_score
@@ -2784,10 +2872,34 @@ tr:hover td{background:#f8fafc;}
 // ── Chart.js script tag ──
 function chartScript(charts) {
   return `<script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><script>
-const PAL=['#4361ee','#f72585','#f77f00','#06b6d4','#0a9c5a','#7209b7','#e5383b','#ffd166','#06d6a0','#118ab2','#ef476f','#ffc8dd'];
+var CE_PAL={Default:["#4361ee","#f72585","#f77f00","#06b6d4","#0a9c5a","#7209b7","#e5383b","#ffd166","#06d6a0","#118ab2"],Ocean:["#0077b6","#00b4d8","#90e0ef","#023e8a","#0096c7","#48cae4","#ade8f4","#3a86ff","#1a759f","#168aad"],Sunset:["#ff6b6b","#ffa07a","#ffd700","#ff8c00","#dc143c","#ff4500","#ff6347","#ff7f50","#ff69b4","#db7093"],Forest:["#2d6a4f","#40916c","#52b788","#74c69d","#95d5b2","#1b4332","#52796f","#84a98c","#cad2c5","#354f52"],Mono:["#1a1a2e","#16213e","#0f3460","#533483","#e94560","#8d99ae","#2b2d42","#ef233c","#d90429","#edf2f4"],Pastel:["#ffd6e0","#ffb3c1","#ff85a1","#c9b1ff","#a8dadc","#b5ead7","#ffdac1","#e2f0cb","#c7ceea","#ffc8dd"],Bold:["#e63946","#2a9d8f","#e9c46a","#264653","#f4a261","#457b9d","#1d3557","#a8dadc","#f1faee","#e76f51"]};
+var CE_R={};
+function CE_tb(id,inst){
+  if(CE_R[id])return; CE_R[id]={inst:inst,pal:"Default"};
+  var cv=document.getElementById(id); if(!cv)return;
+  var wrap=cv.parentElement; if(!wrap||wrap.querySelector(".ce-tb"))return;
+  var tb=document.createElement("div"); tb.className="ce-tb";
+  tb.style.cssText="display:flex;align-items:center;gap:5px;padding:4px 8px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:7px;margin-bottom:5px;flex-wrap:wrap;box-shadow:0 1px 3px rgba(0,0,0,.06);";
+  var types=[["bar","Bar"],["horizontalBar","H-Bar"],["line","Line"],["doughnut","Donut"],["pie","Pie"],["radar","Radar"],["polarArea","Polar"]];
+  var curType=inst.config.type||"bar"; if(curType==="bar"&&inst.config.options&&inst.config.options.indexAxis==="y")curType="horizontalBar";
+  var ts=document.createElement("select"); ts.style.cssText="font-size:11px;padding:2px 5px;border:1px solid #cbd5e1;border-radius:5px;background:#fff;color:#1e293b;cursor:pointer;";
+  types.forEach(function(t){var o=document.createElement("option");o.value=t[0];o.textContent=t[1];if(t[0]===curType)o.selected=true;ts.appendChild(o);});
+  ts.addEventListener("change",function(){CE_chType(id,ts.value);});
+  var lbl1=document.createElement("span");lbl1.textContent="📊";lbl1.style.fontSize="12px";
+  var ps=document.createElement("select"); ps.style.cssText="font-size:11px;padding:2px 5px;border:1px solid #cbd5e1;border-radius:5px;background:#fff;color:#1e293b;cursor:pointer;";
+  Object.keys(CE_PAL).forEach(function(nm){var o=document.createElement("option");o.value=nm;o.textContent=nm;if(nm==="Default")o.selected=true;ps.appendChild(o);});
+  ps.addEventListener("change",function(){CE_applyPal(id,ps.value);});
+  var lbl2=document.createElement("span");lbl2.textContent="🎨";lbl2.style.fontSize="12px";
+  tb.appendChild(lbl1);tb.appendChild(ts);tb.appendChild(lbl2);tb.appendChild(ps);
+  wrap.insertBefore(tb,cv);
+}
+function CE_applyPal(id,nm){var r=CE_R[id];if(!r)return;var pal=CE_PAL[nm]||CE_PAL.Default;r.pal=nm;r.inst.data.datasets.forEach(function(ds,i){var isArr=Array.isArray(ds.backgroundColor)&&ds.backgroundColor.length>1;ds.backgroundColor=isArr?pal.slice(0,ds.backgroundColor.length):pal[i%pal.length];if(ds.borderColor&&ds.borderColor!=="transparent")ds.borderColor=isArr?ds.backgroundColor:pal[i%pal.length];});r.inst.update();}
+function CE_chType(id,nt){var r=CE_R[id];if(!r)return;var inst=r.inst;var cv=inst.canvas;var labels=inst.data.labels;var datasets=inst.data.datasets;var flat=nt==="doughnut"||nt==="pie"||nt==="radar"||nt==="polarArea";inst.destroy();delete CE_R[id];var at=nt==="horizontalBar"?"bar":nt;var opts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:12}}},scales:flat?{}:{y:{beginAtZero:true,ticks:{font:{size:10}}},x:{ticks:{font:{size:10}}}}};if(nt==="horizontalBar")opts.indexAxis="y";var ni=new Chart(cv.getContext("2d"),{type:at,data:{labels:labels,datasets:datasets},options:opts});CE_R[id]={inst:ni,pal:r.pal};if(r.pal&&r.pal!=="Default")CE_applyPal(id,r.pal);}
 function C(id,type,labels,datasets,opts){
-  const ctx=document.getElementById(id);if(!ctx)return;
-  new Chart(ctx.getContext('2d'),{type,data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:12}}},scales:type==='doughnut'||type==='pie'?{}:{y:{beginAtZero:true,ticks:{font:{size:10}}},x:{ticks:{font:{size:10}}}},...(opts||{})}});
+  var cv=document.getElementById(id);if(!cv)return;
+  var flat=type==="doughnut"||type==="pie"||type==="radar"||type==="polarArea";
+  var inst=new Chart(cv.getContext("2d"),{type:type,data:{labels:labels,datasets:datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:12}}},scales:flat?{}:{y:{beginAtZero:true,ticks:{font:{size:10}}},x:{ticks:{font:{size:10}}}},...(opts||{})}});
+  CE_tb(id,inst);
 }
 ${charts}
 <\/script>`;
@@ -3884,12 +3996,17 @@ DESIGN SYSTEM (apply to all dashboards):
 - Tables: width:100%, border-collapse:collapse. TH: bg=#f1f5f9, font-size:11px, uppercase, padding:8px 10px. TD: padding:8px 10px, font-size:13px, border-bottom:1px solid #f1f5f9
 - KPI pill: display:inline-flex, align-items:center, gap:6px, background:#f8fafc, border:1px solid #e2e8f0, border-radius:8px, padding:10px 16px, margin:4px
 - Chart canvas: ALWAYS set explicit height e.g. style="height:240px" on the canvas wrapper div — never leave height:auto
-- Chart.js CDN: https://cdn.jsdelivr.net/npm/chart.js
+- Chart.js CDN in <head>: <script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
 - ALL charts: responsive:true, maintainAspectRatio:false
+- EVERY canvas MUST have a unique id: <canvas id="c1"></canvas>
+- EVERY chart wrapper div MUST have explicit height: <div style="position:relative;height:200px;">
+- Initialize ALL charts in DOMContentLoaded or at bottom of <body> — NEVER inline
+- Minimum 6 charts per dashboard. NEVER skip a chart container.
 - Insight caption below each chart: font-size:12px, color:#6b7280, margin-top:6px, font-style:italic
 - Output must be fully self-contained HTML (all CSS inline or in <style> block)
 - REAL data only — never invent or use placeholder numbers
 - If data for a section is missing: show a grey "No data available" placeholder card
+- SECTION WRAPPING: Wrap EVERY section in <section class="dash-sec" data-sec-id="SLUG" data-sec-title="Title"> — mandatory, no exceptions
 
 Return EXACTLY:
 ===ANALYSIS===
@@ -3954,6 +4071,7 @@ DESIGN SYSTEM (apply to all dashboards):
 - Output must be fully self-contained HTML (all CSS inline or in <style> block)
 - REAL data only — never invent or use placeholder numbers
 - If data for a section is missing: show a grey "No data available" placeholder card
+- SECTION WRAPPING: Wrap EVERY section in <section class="dash-sec" data-sec-id="SLUG" data-sec-title="Title"> — mandatory, no exceptions
 
 Return EXACTLY:
 ===ANALYSIS===
@@ -4002,6 +4120,7 @@ DESIGN SYSTEM (apply to all dashboards):
 - Output must be fully self-contained HTML (all CSS inline or in <style> block)
 - REAL data only — never invent or use placeholder numbers
 - If data for a section is missing: show a grey "No data available" placeholder card
+- SECTION WRAPPING: Wrap EVERY section in <section class="dash-sec" data-sec-id="SLUG" data-sec-title="Title"> — mandatory, no exceptions
 
 Return EXACTLY:
 ===ANALYSIS===
@@ -4052,6 +4171,7 @@ DESIGN SYSTEM (apply to all dashboards):
 - Output must be fully self-contained HTML (all CSS inline or in <style> block)
 - REAL data only — never invent or use placeholder numbers
 - If data for a section is missing: show a grey "No data available" placeholder card
+- SECTION WRAPPING: Wrap EVERY section in <section class="dash-sec" data-sec-id="SLUG" data-sec-title="Title"> — mandatory, no exceptions
 
 Return EXACTLY:
 ===ANALYSIS===
@@ -4105,6 +4225,7 @@ DESIGN SYSTEM (apply to all dashboards):
 - Output must be fully self-contained HTML (all CSS inline or in <style> block)
 - REAL data only — never invent or use placeholder numbers
 - If data for a section is missing: show a grey "No data available" placeholder card
+- SECTION WRAPPING: Wrap EVERY section in <section class="dash-sec" data-sec-id="SLUG" data-sec-title="Title"> — mandatory, no exceptions
 
 Return EXACTLY:
 ===ANALYSIS===
@@ -4156,6 +4277,7 @@ DESIGN SYSTEM (apply to all dashboards):
 - Output must be fully self-contained HTML (all CSS inline or in <style> block)
 - REAL data only — never invent or use placeholder numbers
 - If data for a section is missing: show a grey "No data available" placeholder card
+- SECTION WRAPPING: Wrap EVERY section in <section class="dash-sec" data-sec-id="SLUG" data-sec-title="Title"> — mandatory, no exceptions
 
 Return EXACTLY:
 ===ANALYSIS===
@@ -4210,6 +4332,7 @@ DESIGN SYSTEM (apply to all dashboards):
 - Output must be fully self-contained HTML (all CSS inline or in <style> block)
 - REAL data only — never invent or use placeholder numbers
 - If data for a section is missing: show a grey "No data available" placeholder card
+- SECTION WRAPPING: Wrap EVERY section in <section class="dash-sec" data-sec-id="SLUG" data-sec-title="Title"> — mandatory, no exceptions
 
 Return EXACTLY:
 ===ANALYSIS===
@@ -4262,6 +4385,7 @@ DESIGN SYSTEM (apply to all dashboards):
 - Output must be fully self-contained HTML (all CSS inline or in <style> block)
 - REAL data only — never invent or use placeholder numbers
 - If data for a section is missing: show a grey "No data available" placeholder card
+- SECTION WRAPPING: Wrap EVERY section in <section class="dash-sec" data-sec-id="SLUG" data-sec-title="Title"> — mandatory, no exceptions
 
 Return EXACTLY:
 ===ANALYSIS===
@@ -4315,6 +4439,7 @@ DESIGN SYSTEM (apply to all dashboards):
 - Output must be fully self-contained HTML (all CSS inline or in <style> block)
 - REAL data only — never invent or use placeholder numbers
 - If data for a section is missing: show a grey "No data available" placeholder card
+- SECTION WRAPPING: Wrap EVERY section in <section class="dash-sec" data-sec-id="SLUG" data-sec-title="Title"> — mandatory, no exceptions
 
 Return EXACTLY:
 ===ANALYSIS===
@@ -4397,8 +4522,10 @@ Section headers: 13px, font-weight:700, text-transform:uppercase, letter-spacing
 Table style: width:100%, border-collapse:collapse. TH: background:#f1f5f9, font-size:11px, uppercase, padding:8px 10px. TD: padding:8px 10px, font-size:13px, border-bottom:1px solid #f1f5f9
 Progress bars: height:6px, border-radius:3px, background:#e2e8f0, fill with gradient
 Trend badges: inline-flex, border-radius:20px, padding:2px 8px, font-size:11px. Green bg for ▲, Red bg for ▼
-Chart.js CDN: https://cdn.jsdelivr.net/npm/chart.js
+Chart.js CDN must be in <head>: <script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
 ALL charts: responsive:true, maintainAspectRatio:false, legend position bottom or right
+EVERY canvas must have unique id attribute. EVERY chart wrapper: style="position:relative;height:200px;"
+Initialize ALL charts inside DOMContentLoaded — never inline-script charts before Chart.js loads.
 Grid layout: CSS Grid, gap:20px, responsive breakpoints
 
 ═══════════════════════════════
@@ -4409,9 +4536,9 @@ CRITICAL DATA RULES
 - NEVER show placeholder or example numbers — only real extracted data
 - If a section has no data: show a clean "Data not available in this report" placeholder card
 - Do NOT use giant hero stat cards — use compact metric strips instead
-- Minimum dashboard output: 800 lines of HTML
+- Minimum dashboard output: 800 lines of HTML — MINIMUM 6 CHARTS
 - All CSS must be inline or in a <style> block inside the HTML output
-- Chart canvas elements must have explicit height set (e.g. style="height:220px")
+- Chart canvas elements must have explicit height on their wrapper div (style="height:200px")
 
 Return EXACTLY this format:
 ===ANALYSIS===
@@ -4576,8 +4703,8 @@ function parseDashResponse(reply, type, label) {
     dashHtml = dashHtml.replace('</head>', tableFixCss + '</head>');
 
     // Inject chart editor toolbar into iframe
-    var _ceScript = '<scr'+'ipt>\n' + '(function(){\n  var PAL={\n    "Default":["#4361ee","#f72585","#f77f00","#06b6d4","#0a9c5a","#7209b7","#e5383b","#ffd166","#06d6a0","#118ab2"],\n    "Ocean":["#0077b6","#00b4d8","#90e0ef","#023e8a","#0096c7","#48cae4","#ade8f4","#3a86ff","#1a759f","#168aad"],\n    "Sunset":["#ff6b6b","#ffa07a","#ffd700","#ff8c00","#dc143c","#ff4500","#ff6347","#ff7f50","#ff69b4","#db7093"],\n    "Forest":["#2d6a4f","#40916c","#52b788","#74c69d","#95d5b2","#1b4332","#52796f","#84a98c","#cad2c5","#354f52"],\n    "Mono":["#1a1a2e","#16213e","#0f3460","#533483","#e94560","#8d99ae","#2b2d42","#ef233c","#d90429","#edf2f4"],\n    "Pastel":["#ffd6e0","#ffb3c1","#ff85a1","#c9b1ff","#a8dadc","#b5ead7","#ffdac1","#e2f0cb","#c7ceea","#ffc8dd"],\n    "Bold":["#e63946","#2a9d8f","#e9c46a","#264653","#f4a261","#457b9d","#1d3557","#a8dadc","#f1faee","#e76f51"]\n  };\n  var R={};\n\n  function mkTb(id){\n    var ch=R[id]; if(!ch||ch._tb) return;\n    var cv=document.getElementById(id); if(!cv) return;\n    var wrap=cv.parentElement; if(!wrap||wrap.dataset.ce) return;\n    wrap.dataset.ce="1"; wrap.style.position="relative";\n    var tb=document.createElement("div");\n    tb.style.cssText="display:flex;align-items:center;gap:5px;padding:4px 7px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:7px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:5px;flex-wrap:wrap;";\n    var lbl=document.createElement("span"); lbl.textContent="📊 Type:";\n    lbl.style.cssText="font-size:10px;color:#94a3b8;font-weight:600;";\n    tb.appendChild(lbl);\n    var sel=document.createElement("select");\n    sel.style.cssText="font-size:11px;padding:2px 5px;border:1px solid #e2e8f0;border-radius:5px;background:white;color:#1e293b;cursor:pointer;";\n    [["bar","Bar"],["horizontalBar","H-Bar"],["line","Line"],["doughnut","Donut"],["pie","Pie"],["radar","Radar"],["polarArea","Polar"]].forEach(function(t){\n      var o=document.createElement("option"); o.value=t[0]; o.textContent=t[1];\n      var cur=ch.type; if(cur==="bar"&&ch.opts&&ch.opts.indexAxis==="y") cur="horizontalBar";\n      if(t[0]===cur) o.selected=true; sel.appendChild(o);\n    });\n    sel.onchange=function(){ chType(id,sel.value); };\n    tb.appendChild(sel);\n    var pl=document.createElement("span"); pl.textContent=" 🎨";\n    pl.style.cssText="font-size:12px;";\n    var ps=document.createElement("select");\n    ps.style.cssText="font-size:11px;padding:2px 5px;border:1px solid #e2e8f0;border-radius:5px;background:white;color:#1e293b;cursor:pointer;";\n    Object.keys(PAL).forEach(function(n){ var o=document.createElement("option"); o.value=n; o.textContent=n; if(n==="Default") o.selected=true; ps.appendChild(o); });\n    ps.onchange=function(){ applyPal(id,ps.value); };\n    tb.appendChild(pl); tb.appendChild(ps);\n    wrap.insertBefore(tb,wrap.firstChild); ch._tb=tb;\n  }\n\n  function applyPal(id,nm){\n    var ch=R[id]; if(!ch) return;\n    var pal=PAL[nm]||PAL["Default"]; ch.currentPal=nm;\n    ch.inst.data.datasets.forEach(function(ds,i){\n      if(Array.isArray(ds.backgroundColor)&&ds.backgroundColor.length>1) ds.backgroundColor=pal.slice(0,ds.backgroundColor.length);\n      else{ ds.backgroundColor=pal[i%pal.length]; if(ds.borderColor&&ds.borderColor!=="transparent") ds.borderColor=pal[i%pal.length]; }\n    }); ch.inst.update();\n  }\n\n  function chType(id,nt){\n    var ch=R[id]; if(!ch) return;\n    ch.inst.destroy();\n    var cv=document.getElementById(id); if(!cv) return;\n    var at=nt==="horizontalBar"?"bar":nt;\n    var no=JSON.parse(JSON.stringify(ch.opts||{}));\n    if(nt==="horizontalBar") no.indexAxis="y"; else delete no.indexAxis;\n    var flat=at==="doughnut"||at==="pie"||at==="radar"||at==="polarArea";\n    ch.inst=new Chart(cv.getContext("2d"),{type:at,data:{labels:ch.labels,datasets:ch.datasets},\n      options:Object.assign({responsive:true,maintainAspectRatio:false,\n        plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:12}}},\n        scales:flat?{}:{y:{beginAtZero:true,ticks:{font:{size:10}}},x:{ticks:{font:{size:10}}}}},no)});\n    ch.type=nt; if(ch.currentPal&&ch.currentPal!=="Default") applyPal(id,ch.currentPal);\n  }\n\n  function hookAll(){\n    if(!window.Chart) return false;\n    // Hook Chart constructor\n    var OC=Chart;\n    window.Chart=function(ctx,cfg){\n      var inst=new OC(ctx,cfg);\n      var id=ctx&&ctx.canvas?ctx.canvas.id:null;\n      if(id){ R[id]={inst:inst,type:cfg.type,labels:(cfg.data&&cfg.data.labels)||[],datasets:(cfg.data&&cfg.data.datasets)||[],opts:{},currentPal:"Default"}; setTimeout(function(){ mkTb(id); },60); }\n      return inst;\n    };\n    Object.assign(window.Chart,OC); window.Chart.prototype=OC.prototype;\n    // Also hook C() helper\n    if(window.C){ var oC=window.C; window.C=function(id,type,labels,datasets,opts){\n      oC(id,type,labels,datasets,opts);\n      var cv=document.getElementById(id); if(!cv) return;\n      var inst=Chart.getChart?Chart.getChart(cv):null;\n      if(inst){ R[id]={inst:inst,type:type,labels:labels,datasets:datasets,opts:opts||{},currentPal:"Default"}; setTimeout(function(){ mkTb(id); },80); }\n    }; }\n    // Scan existing charts\n    setTimeout(function(){\n      document.querySelectorAll("canvas").forEach(function(cv){\n        var id=cv.id; if(!id) return;\n        var inst=Chart.getChart?Chart.getChart(cv):null;\n        if(inst&&!R[id]){ R[id]={inst:inst,type:inst.config.type,labels:inst.data.labels||[],datasets:inst.data.datasets||[],opts:{},currentPal:"Default"}; mkTb(id); }\n        else if(R[id]&&!R[id]._tb) mkTb(id);\n      });\n    },600);\n    return true;\n  }\n  function init(){ if(!hookAll()) setTimeout(init,150); }\n  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",init);\n  else init();\n})();' + '\n<\/scr'+'ipt>';
-    dashHtml = dashHtml.replace('</head>', _ceScript + '</head>');
+    var _ceScript = '<scr'+'ipt>\n' + '(function(){\nif(window.__CE_INIT__)return; window.__CE_INIT__=true;\nvar PAL={Default:["#4361ee","#f72585","#f77f00","#06b6d4","#0a9c5a","#7209b7","#e5383b","#ffd166","#06d6a0","#118ab2"],Ocean:["#0077b6","#00b4d8","#90e0ef","#023e8a","#0096c7","#48cae4","#ade8f4","#3a86ff","#1a759f","#168aad"],Sunset:["#ff6b6b","#ffa07a","#ffd700","#ff8c00","#dc143c","#ff4500","#ff6347","#ff7f50","#ff69b4","#db7093"],Forest:["#2d6a4f","#40916c","#52b788","#74c69d","#95d5b2","#1b4332","#52796f","#84a98c","#cad2c5","#354f52"],Mono:["#1a1a2e","#16213e","#0f3460","#533483","#e94560","#8d99ae","#2b2d42","#ef233c","#d90429","#edf2f4"],Pastel:["#ffd6e0","#ffb3c1","#ff85a1","#c9b1ff","#a8dadc","#b5ead7","#ffdac1","#e2f0cb","#c7ceea","#ffc8dd"],Bold:["#e63946","#2a9d8f","#e9c46a","#264653","#f4a261","#457b9d","#1d3557","#a8dadc","#f1faee","#e76f51"]};\nvar R={};\nvar _uid=0;\n\nfunction mkTb(id,inst){\n  if(R[id])return; R[id]={inst:inst,pal:"Default"};\n  var cv=document.getElementById(id); if(!cv)return;\n  var wrap=cv.parentElement; if(!wrap)return;\n  if(wrap.querySelector(".ce-tb"))return;\n  /* ensure wrap has height so chart renders */\n  if(!wrap.style.height&&!wrap.style.minHeight){wrap.style.minHeight="200px";}\n  wrap.style.display="flex"; wrap.style.flexDirection="column";\n  var tb=document.createElement("div"); tb.className="ce-tb";\n  tb.style.cssText="display:flex;align-items:center;gap:5px;padding:5px 9px;background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:8px;margin-bottom:6px;flex-wrap:wrap;box-shadow:0 1px 4px rgba(0,0,0,.08);flex-shrink:0;font-family:system-ui,sans-serif;";\n  /* Type */\n  var tl=document.createElement("span"); tl.textContent="📊 Type:"; tl.style.cssText="font-size:10px;color:#64748b;font-weight:700;white-space:nowrap;";\n  var ts=document.createElement("select"); ts.style.cssText="font-size:11px;padding:2px 6px;border:1.5px solid #cbd5e1;border-radius:5px;background:#fff;color:#1e293b;cursor:pointer;";\n  var types=[["bar","Bar"],["horizontalBar","H-Bar"],["line","Line"],["doughnut","Donut"],["pie","Pie"],["radar","Radar"],["polarArea","Polar"]];\n  var cur=inst.config.type||"bar"; if(cur==="bar"&&inst.config.options&&inst.config.options.indexAxis==="y")cur="horizontalBar";\n  types.forEach(function(t){var o=document.createElement("option");o.value=t[0];o.textContent=t[1];if(t[0]===cur)o.selected=true;ts.appendChild(o);});\n  ts.addEventListener("change",function(){chType(id,ts.value);});\n  /* Palette */\n  var pl=document.createElement("span"); pl.textContent="🎨"; pl.style.cssText="font-size:12px;margin-left:4px;";\n  var ps=document.createElement("select"); ps.style.cssText="font-size:11px;padding:2px 6px;border:1.5px solid #cbd5e1;border-radius:5px;background:#fff;color:#1e293b;cursor:pointer;";\n  Object.keys(PAL).forEach(function(nm){var o=document.createElement("option");o.value=nm;o.textContent=nm;if(nm==="Default")o.selected=true;ps.appendChild(o);});\n  ps.addEventListener("change",function(){applyPal(id,ps.value);});\n  tb.appendChild(tl);tb.appendChild(ts);tb.appendChild(pl);tb.appendChild(ps);\n  wrap.insertBefore(tb,cv);\n}\n\nfunction applyPal(id,nm){\n  var r=R[id];if(!r)return; var pal=PAL[nm]||PAL.Default; r.pal=nm;\n  r.inst.data.datasets.forEach(function(ds,i){\n    var isArr=Array.isArray(ds.backgroundColor)&&ds.backgroundColor.length>1;\n    ds.backgroundColor=isArr?pal.slice(0,ds.backgroundColor.length):pal[i%pal.length];\n    if(ds.borderColor&&ds.borderColor!=="transparent"&&!/^rgba\\(0,0,0,0\\)$/.test(ds.borderColor))\n      ds.borderColor=isArr?pal.slice(0,ds.backgroundColor.length):pal[i%pal.length];\n  }); r.inst.update();\n}\n\nfunction chType(id,nt){\n  var r=R[id];if(!r)return;\n  var inst=r.inst; var cv=inst.canvas;\n  var lbl=inst.data.labels; var ds=inst.data.datasets;\n  var flat=nt==="doughnut"||nt==="pie"||nt==="radar"||nt==="polarArea";\n  inst.destroy(); delete R[id];\n  var at=nt==="horizontalBar"?"bar":nt;\n  var o={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:12}}},scales:flat?{}:{y:{beginAtZero:true,ticks:{font:{size:10}}},x:{ticks:{font:{size:10}}}}};\n  if(nt==="horizontalBar")o.indexAxis="y";\n  var ni=new _OrigChart(cv.getContext("2d"),{type:at,data:{labels:lbl,datasets:ds},options:o});\n  R[id]={inst:ni,pal:r.pal}; if(r.pal&&r.pal!=="Default")applyPal(id,r.pal);\n}\n\nfunction registerInst(inst){\n  var cv=inst.canvas; if(!cv)return;\n  if(!cv.id)cv.id="ce-"+(_uid++);\n  mkTb(cv.id,inst);\n}\n\nfunction scanAll(){\n  if(!window.Chart||!Chart.instances)return;\n  Object.keys(Chart.instances).forEach(function(k){try{registerInst(Chart.instances[k]);}catch(e){}});\n}\n\n/* Store original Chart before hooking */\nvar _OrigChart=window.Chart;\n\n/* Hook Chart constructor */\nif(!window.Chart.__ce__){\n  var _Orig=window.Chart;\n  function _Hooked(ctx,cfg){\n    var inst=new _Orig(ctx,cfg);\n    var canvas=ctx instanceof HTMLCanvasElement?ctx:(ctx&&ctx.canvas?ctx.canvas:null);\n    if(canvas){if(!canvas.id)canvas.id="ce-"+(_uid++); mkTb(canvas.id,inst);}\n    return inst;\n  }\n  _Hooked.prototype=_Orig.prototype;\n  Object.keys(_Orig).forEach(function(k){try{_Hooked[k]=_Orig[k];}catch(e){}});\n  _Hooked.__ce__=true; _Hooked.instances=_Orig.instances;\n  window.Chart=_Hooked; _OrigChart=_Orig;\n}\n\n/* Wrap C() helper if present */\nif(window.C&&!window.C.__ce__){\n  var _oC=window.C;\n  window.C=function(id,type,labels,datasets,opts){\n    _oC(id,type,labels,datasets,opts);\n    setTimeout(function(){\n      var cv=document.getElementById(id); if(!cv)return;\n      var inst=null;\n      if(Chart.getChart)inst=Chart.getChart(cv);\n      if(!inst)Object.keys(Chart.instances||{}).forEach(function(k){if(Chart.instances[k].canvas===cv)inst=Chart.instances[k];});\n      if(inst)mkTb(id,inst);\n    },30);\n  };\n  window.C.__ce__=true;\n}\n\n/* Scan existing charts (created before this script ran) */\nscanAll();\n\n/* MutationObserver: pick up canvases added after initial load */\nif(window.MutationObserver){\n  var mo=new MutationObserver(function(){scanAll();});\n  mo.observe(document.body,{childList:true,subtree:true});\n}\n\n/* Fallback polls */\nvar _pt=0;\nfunction poll(){scanAll();_pt++;if(_pt<30)setTimeout(poll,300);else if(_pt<60)setTimeout(poll,800);}\nsetTimeout(poll,100);\n})();\n' + '<\/scr'+'ipt>';;
+    dashHtml = dashHtml.replace('</body>', _ceScript + '</body>').replace('</html>', _ceScript + '</html>');
 
         storeDashHtml(type, dashHtml);
     const blob = new Blob([dashHtml], { type: 'text/html; charset=utf-8' });
@@ -4602,6 +4729,178 @@ function parseDashResponse(reply, type, label) {
   window._lastDashAnalysis = analysisText;
   window._lastDashHtml     = dashHtml;   // fully-processed, injection-ready
   dashRenderActionBar(type, label, analysisText, dashHtml);
+
+  // ── Layout editor: apply saved layout + render bar ────
+  dashApplyLayout(type);
+  dashRenderLayoutBar(type);
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
+// INTERVIEW PACK — v1
+// Functions: ipToggle, ipToggleBatch, ipGenerate
+// ═══════════════════════════════════════════════════════════════════
+
+const INTERVIEW_PACK_PROMPT = `You are a senior technical interviewer and talent acquisition expert. Generate a comprehensive, role-specific Interview Pack for ONE candidate.
+
+OUTPUT FORMAT (exact — do not deviate):
+
+━━━ INTERVIEW PACK ━━━
+Candidate: [extract name from resume if present, else "Candidate"]
+Role: [extract job title from JD if present, else "the role"]
+
+A) TECHNICAL QUESTIONS — 6 (increasing difficulty)
+1. [question specific to this candidate's stack and the JD requirements]
+   ✦ Strong answer includes: [2–3 key points]
+2. [harder question]
+   ✦ Strong answer includes: [2–3 key points]
+3. [question]
+   ✦ Strong answer includes: [2–3 key points]
+4. [question]
+   ✦ Strong answer includes: [2–3 key points]
+5. [senior-level question]
+   ✦ Strong answer includes: [2–3 key points]
+6. [most difficult — design/architecture/trade-off question]
+   ✦ Strong answer includes: [2–3 key points]
+
+B) BEHAVIORAL QUESTIONS — 4 (mapped to role competencies)
+1. [STAR-format question]
+   ✦ Competency: [name] | Red flag if: [brief]
+2. [STAR-format question]
+   ✦ Competency: [name] | Red flag if: [brief]
+3. [STAR-format question]
+   ✦ Competency: [name] | Red flag if: [brief]
+4. [STAR-format question]
+   ✦ Competency: [name] | Red flag if: [brief]
+
+C) RISK VALIDATION QUESTIONS — 3 (probe specific gaps from this resume)
+1. [question targeting a specific gap or concern]
+   ✦ Gap it probes: [gap name]
+2. [question targeting a specific gap or concern]
+   ✦ Gap it probes: [gap name]
+3. [question targeting a specific gap or concern]
+   ✦ Gap it probes: [gap name]
+
+D) SCORECARD RUBRIC (score each dimension 1–5 during interview)
+| Dimension | 1 – Weak | 3 – Acceptable | 5 – Exceptional |
+|---|---|---|---|
+| Technical Depth | [descriptor] | [descriptor] | [descriptor] |
+| Ownership & Drive | [descriptor] | [descriptor] | [descriptor] |
+| Communication | [descriptor] | [descriptor] | [descriptor] |
+| Problem Solving | [descriptor] | [descriptor] | [descriptor] |
+
+E) CLOSING / SELL QUESTIONS — 2 (to close the candidate and address likely objections)
+1. [question surfacing their motivations — use to pitch role strengths]
+   ✦ Use to address: [likely objection, e.g. comp, growth, stability]
+2. [question about their decision criteria / competing offers]
+   ✦ Use to address: [likely objection]
+
+━━━ END INTERVIEW PACK ━━━
+
+RULES — non-negotiable:
+- Every question must reference THIS candidate's actual experience and THIS role's actual requirements
+- Technical questions must mention specific tools/languages/systems from the resume and JD
+- Risk questions must reference actual gaps or concerns found during screening
+- No generic filler questions — every question must be unmistakably specific
+- Scorecard descriptors must be concrete observable behaviors, not adjectives`;
+
+async function ipGenerate(resumeText, jd, label, targetEl) {
+  const apiKey = document.getElementById('api-key').value.trim();
+  if (!isKeyValid(apiKey)) {
+    alert('Please add a valid API key in the sidebar first.');
+    return;
+  }
+
+  // Loading state
+  targetEl.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;background:#fdf4ff;border:1.5px solid #e9d5ff;border-radius:10px;color:#7209b7;font-size:0.82rem;font-weight:500;">
+      <div class="typing"><span></span><span></span><span></span></div>
+      Generating Interview Pack${label ? ' for ' + label : ''}…
+    </div>`;
+
+  const msgContent = [
+    '[JOB DESCRIPTION]', (jd || '(no JD provided — generate role-appropriate questions)'),
+    '', '[CANDIDATE RESUME]', resumeText,
+    '', '[REQUEST]', 'Generate the complete Interview Pack for this specific candidate against this specific role.'
+  ].join('\n');
+
+  try {
+    const reply = await callAI(INTERVIEW_PACK_PROMPT, [{ role: 'user', content: msgContent }], 2200);
+    const uid = 'ip-out-' + Date.now();
+    targetEl.innerHTML = `
+      <div style="background:#fff;border:1.5px solid #e9d5ff;border-radius:12px;overflow:hidden;margin-top:2px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;background:linear-gradient(135deg,rgba(247,37,133,.07),rgba(114,9,183,.07));border-bottom:1px solid #e9d5ff;">
+          <span style="font-size:0.79rem;font-weight:700;background:linear-gradient(135deg,#f72585,#7209b7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+            🎤 Interview Pack${label ? ' — ' + label : ''}
+          </span>
+          <button class="psa-btn psa-sm"
+            style="background:#fff;border:1.5px solid #d8b4fe;color:#7209b7;font-size:0.7rem;"
+            onclick="(function(b){navigator.clipboard.writeText(document.getElementById('${uid}').innerText).then(()=>{b.textContent='✅ Copied!';setTimeout(()=>{b.textContent='📋 Copy';},1800);})})(this)">
+            📋 Copy
+          </button>
+        </div>
+        <div id="${uid}"
+          style="padding:14px 16px;font-size:0.81rem;line-height:1.78;color:var(--text);white-space:pre-wrap;max-height:540px;overflow-y:auto;">
+          ${formatAI(reply)}
+        </div>
+      </div>`;
+  } catch(err) {
+    targetEl.innerHTML = `
+      <div style="padding:10px 14px;background:#fff5f5;border:1px solid #fecaca;border-radius:8px;color:#dc2626;font-size:0.82rem;">
+        ⚠️ Error generating Interview Pack: ${err.message}
+      </div>`;
+  }
+}
+
+// ── Single-candidate toggle ────────────────────────────────────
+function ipToggle(mode, encodedResume, encodedJD, btn) {
+  const panel = document.getElementById('ip-panel-single');
+  if (!panel) return;
+  const isOpen = panel.style.display !== 'none';
+
+  if (isOpen) {
+    panel.style.display = 'none';
+    btn.textContent = '🎤 Show Interview Pack';
+    btn.style.background = 'linear-gradient(135deg,#f72585,#7209b7)';
+    return;
+  }
+
+  // Open
+  panel.style.display = 'block';
+  btn.textContent = '🎤 Hide Interview Pack';
+  btn.style.background = 'linear-gradient(135deg,#7209b7,#4361ee)';
+
+  // Only generate once
+  if (panel.innerHTML.trim() !== '') return;
+
+  const resume = decodeURIComponent(encodedResume);
+  const jd     = decodeURIComponent(encodedJD);
+  ipGenerate(resume, jd, null, panel);
+}
+
+// ── Batch per-candidate toggle ─────────────────────────────────
+function ipToggleBatch(idx, btn) {
+  const panel = document.getElementById('ip-panel-batch-' + idx);
+  if (!panel) return;
+  const cands = window._batchCandidates || [];
+  const cand  = cands[idx];
+  if (!cand) { alert('Candidate data not found. Please re-run screening.'); return; }
+
+  const isOpen = panel.style.display !== 'none';
+  if (isOpen) {
+    panel.style.display = 'none';
+    btn.textContent = '🎤 Pack';
+    btn.style.background = 'linear-gradient(135deg,#f72585,#7209b7)';
+    return;
+  }
+
+  panel.style.display = 'block';
+  btn.textContent = '🎤 Hide';
+  btn.style.background = 'linear-gradient(135deg,#7209b7,#4361ee)';
+
+  // Only generate once
+  if (panel.innerHTML.trim() !== '') return;
+  ipGenerate(cand.text, window._batchJD || '', cand.name, panel);
 }
 
 // =================== END DASHBOARD ===================
@@ -5649,6 +5948,8 @@ function promptMode(mode) {
 }
 
 function setMode(mode) {
+  // Backward compat: 'interview' tab removed — redirect to screen mode
+  if (mode === 'interview') mode = 'screen';
   // hide dashboard if switching to chat mode
   document.getElementById('dashboard-panel').classList.remove('visible');
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
@@ -5659,30 +5960,19 @@ function setMode(mode) {
   const panel = document.getElementById('context-panel');
   const jdG = document.getElementById('ctx-jd-group');
   const resG = document.getElementById('ctx-resume-group');
-  const batchG = document.getElementById('ctx-batch-group');
 
   if (m.contextGroups.length > 0) {
     panel.classList.add('visible');
     jdG.style.display = m.contextGroups.includes('jd') ? 'flex' : 'none';
-    if (mode === 'screen' || mode === 'interview') {
-      // Show both single resume + batch group
+    if (mode === 'screen') {
       resG.style.display = 'flex';
-      batchG.style.display = 'flex';
-      if (mode === 'interview') {
-        // Update batch group label for interview context
-        const batchLabel = batchG.querySelector('.ctx-label');
-        if (batchLabel) batchLabel.innerHTML = '👥 Additional Candidates <span style="font-size:0.62rem;color:var(--accent);">→ get questions per candidate</span><span style="font-size:0.65rem;color:var(--text-muted);" id="batch-count-label"></span>';
-      } else {
-        const batchLabel = batchG.querySelector('.ctx-label');
-        if (batchLabel) batchLabel.innerHTML = '👥 Additional Resumes <span style="font-size:0.62rem;color:var(--accent);">→ Batch mode auto-activates</span><span style="font-size:0.65rem;color:var(--text-muted);" id="batch-count-label"></span>';
-      }
+      const lbl = document.getElementById('resume-group-label');
+      if (lbl) lbl.textContent = '👤 Candidate Resume(s)';
     } else {
       resG.style.display = m.contextGroups.includes('resume') ? 'flex' : 'none';
-      batchG.style.display = 'none';
     }
   } else {
     panel.classList.remove('visible');
-    batchG.style.display = 'none';
   }
 
   const chips = document.getElementById('quick-chips');
@@ -5702,47 +5992,39 @@ function setMode(mode) {
   currentMode = mode;
   chatHistory = [];
   document.getElementById('chat-container').innerHTML = '';
+  // Reset resume inputs on mode switch
+  batchFiles = [];
+  document.getElementById('batch-file-list').innerHTML = '';
+  const bclbl = document.getElementById('batch-count-label');
+  if (bclbl) bclbl.textContent = '';
+  const bfi = document.getElementById('batch-file-input');
+  if (bfi) bfi.value = '';
+  const ctx_res = document.getElementById('ctx-resume');
+  if (ctx_res) ctx_res.value = '';
+  // For non-screen modes that use resume, default to paste tab
+  if (mode !== 'screen') {
+    switchResumeTab('paste');
+  } else {
+    switchResumeTab('upload');
+  }
 }
 
 // =================== FILE UPLOAD HANDLING ===================
-let resumeFileText = ''; // stores extracted text from single resume upload
-let batchFiles = [];     // [{name, text}]
+let batchFiles = []; // [{name, text}] — handles all resume uploads (single or multiple)
 
 function switchResumeTab(tab) {
   document.getElementById('tab-paste').classList.toggle('active', tab === 'paste');
   document.getElementById('tab-upload').classList.toggle('active', tab === 'upload');
-  document.getElementById('resume-paste-panel').style.display = tab === 'paste' ? 'block' : 'none';
-  document.getElementById('resume-upload-panel').style.display = tab === 'upload' ? 'block' : 'none';
+  document.getElementById('resume-paste-panel').style.display  = tab === 'paste'   ? 'block' : 'none';
+  document.getElementById('resume-upload-panel').style.display = tab === 'upload'  ? 'block' : 'none';
 }
 
 function dzOver(e, id) { e.preventDefault(); document.getElementById(id).classList.add('drag-over'); }
-function dzLeave(id) { document.getElementById(id).classList.remove('drag-over'); }
+function dzLeave(id)   { document.getElementById(id).classList.remove('drag-over'); }
 function dzDrop(e, type) {
   e.preventDefault();
-  const id = type === 'single' ? 'resume-drop' : 'batch-drop';
-  document.getElementById(id).classList.remove('drag-over');
-  const files = e.dataTransfer.files;
-  if (type === 'single' && files.length > 0) handleResumeFile(files[0]);
-  else if (type === 'batch') handleBatchFiles(files);
-}
-
-async function handleResumeFile(file) {
-  if (!file) return;
-  const statusEl = document.getElementById('resume-file-status');
-  statusEl.innerHTML = `<div class="file-chip processing">⏳ Reading ${file.name}...</div>`;
-  try {
-    const text = await extractText(file);
-    resumeFileText = text;
-    statusEl.innerHTML = `<div class="file-chip done">✅ ${file.name} <span class="rm" onclick="clearResumeFile()">✕</span></div>`;
-  } catch(err) {
-    statusEl.innerHTML = `<div class="file-chip" style="border-color:var(--danger);color:var(--danger)">❌ Failed: ${err.message}</div>`;
-  }
-}
-
-function clearResumeFile() {
-  resumeFileText = '';
-  document.getElementById('resume-file-status').innerHTML = '';
-  document.getElementById('resume-file-input').value = '';
+  document.getElementById('batch-drop').classList.remove('drag-over');
+  if (e.dataTransfer.files.length > 0) handleBatchFiles(e.dataTransfer.files);
 }
 
 async function handleBatchFiles(files) {
@@ -5887,14 +6169,14 @@ async function generateBatchOutreachInline() {
   if (!isKeyValid(apiKey)) { alert('Please add a valid API key in the sidebar first.'); return; }
 
   const jd = document.getElementById('ctx-jd').value.trim();
-  const pastedResume = document.getElementById('ctx-resume').value.trim();
-  const resumeText = resumeFileText || pastedResume;
+  const pastedResume = (document.getElementById('ctx-resume')?.value || '').trim();
   const validBatch = batchFiles.filter(f => f && f.text);
 
-  // Build candidate list (same logic as sendMessage)
-  const candidates = [];
-  if (resumeText) candidates.push({ name: 'Candidate 1', text: resumeText });
-  validBatch.forEach((f, i) => candidates.push({ name: f.name.replace(/\.[^.]+$/, ''), text: f.text }));
+  // Build candidate list — same unified logic as sendMessage
+  const candidates = [
+    ...validBatch.map(f => ({ name: f.name.replace(/\.[^.]+$/, ''), text: f.text })),
+    ...(pastedResume ? [{ name: 'Pasted Resume', text: pastedResume }] : [])
+  ];
 
   if (!candidates.length) {
     addMessage('ai', '⚠️ Please upload at least one CV/resume before generating outreach messages.');
@@ -6864,30 +7146,35 @@ async function sendMessage() {
   if (!userText) return;
   const m = MODES[currentMode];
 
-  const pastedResume = document.getElementById('ctx-resume').value.trim();
-  const resumeText   = resumeFileText || pastedResume;
+  const pastedResume = (document.getElementById('ctx-resume')?.value || '').trim();
   const validBatch   = batchFiles.filter(f => f && f.text);
   const jd = document.getElementById('ctx-jd').value.trim();
   let ctx = '';
   if (jd && m.contextGroups.includes('jd')) ctx += `\n\n[JOB DESCRIPTION]\n${jd}`;
 
+  // Build unified candidates list: uploaded files first, pasted text appended if present
+  const allCandidates = [
+    ...validBatch.map(f => ({ name: f.name.replace(/\.[^.]+$/, ''), text: f.text })),
+    ...(pastedResume ? [{ name: 'Pasted Resume', text: pastedResume }] : [])
+  ];
+
   let isBatch = false;
   if (currentMode === 'screen' || currentMode === 'interview') {
-    if (validBatch.length > 0) {
+    if (allCandidates.length > 1) {
       isBatch = true;
-      if (resumeText) ctx += `\n\n[CANDIDATE 1 — Primary Resume]\n${resumeText}`;
-      validBatch.forEach((f, i) => {
-        const num = resumeText ? i + 2 : i + 1;
-        ctx += `\n\n[CANDIDATE ${num} — ${f.name}]\n${f.text}`;
+      allCandidates.forEach((cand, i) => {
+        ctx += `\n\n[CANDIDATE ${i + 1} — ${cand.name}]\n${cand.text}`;
       });
       if (currentMode === 'screen')    ctx += `\n\n[MODE: BATCH — screen all candidates above against the JD and produce individual verdicts + ranked summary table]`;
       if (currentMode === 'interview') ctx += `\n\n[MODE: BATCH — generate tailored technical + behavioral interview questions for EACH candidate separately, using their name as a section header]`;
-    } else if (resumeText) {
-      ctx += `\n\n[CANDIDATE RESUME]\n${resumeText}`;
+    } else if (allCandidates.length === 1) {
+      ctx += `\n\n[CANDIDATE RESUME]\n${allCandidates[0].text}`;
       if (currentMode === 'screen') ctx += `\n\n[MODE: SINGLE — screen this one candidate against the JD]`;
     }
-  } else if (m.contextGroups.includes('resume') && resumeText) {
-    ctx += `\n\n[CANDIDATE RESUME]\n${resumeText}`;
+  } else if (m.contextGroups.includes('resume')) {
+    // Non-screen modes: use first available resume (uploaded or pasted)
+    const resumeForMode = allCandidates.length > 0 ? allCandidates[0].text : pastedResume;
+    if (resumeForMode) ctx += `\n\n[CANDIDATE RESUME]\n${resumeForMode}`;
   }
 
   const full = ctx ? ctx + '\n\n[REQUEST]\n' + userText : userText;
@@ -6907,7 +7194,10 @@ async function sendMessage() {
     chatHistory.push({ role: 'assistant', content: reply });
     addMessage('ai', reply);
     if (currentMode === 'screen') {
-      addOutreachCTA(reply, isBatch, resumeText, validBatch, jd);
+      // Pass unified candidates list to outreach CTA
+      const singleText = allCandidates.length === 1 ? allCandidates[0].text : '';
+      const batchList  = allCandidates.length > 1   ? allCandidates.map(c => ({ name: c.name, text: c.text })) : validBatch;
+      addOutreachCTA(reply, isBatch, singleText, batchList, jd);
     }
   } catch(e) {
     document.getElementById('typing-ind')?.remove();
@@ -6960,9 +7250,17 @@ function addOutreachCTA(reply, isBatch, singleResumeText, batchFilesList, jd) {
           ` : ''}
           <button class="psa-btn psa-purple" onclick="runPostScreeningAction('gap','${enc}','${encJD}')">🔎 Gap Analysis</button>
           <button class="psa-btn psa-red"    onclick="runPostScreeningAction('redflags','${enc}','${encJD}')">🚩 Red Flags Check</button>
-          <button class="psa-btn psa-gold"   onclick="runPostScreeningAction('interview','${enc}','${encJD}')">🎯 Interview Questions</button>
         </div>
         <div id="psa-result-single" style="margin-top:12px;"></div>
+        <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:11px;display:flex;flex-direction:column;gap:8px;">
+          <button class="psa-btn"
+            id="ip-toggle-single"
+            style="background:linear-gradient(135deg,#f72585,#7209b7);color:#fff;font-weight:700;letter-spacing:.3px;align-self:flex-start;"
+            onclick="ipToggle('single','${enc}','${encJD}',this)">
+            🎤 Show Interview Pack
+          </button>
+          <div id="ip-panel-single" style="display:none;"></div>
+        </div>
       </div>`;
 
   // ── batch candidate cards ──────────────────────────────────────
@@ -6992,9 +7290,12 @@ function addOutreachCTA(reply, isBatch, singleResumeText, batchFilesList, jd) {
             <button class="psa-btn psa-blue psa-sm" onclick="runBatchAction('outreach-linkedin',${i})">💼 InMail</button>` : ''}
             <button class="psa-btn psa-purple psa-sm" onclick="runBatchAction('gap',${i})">🔎 Gaps</button>
             <button class="psa-btn psa-red psa-sm" onclick="runBatchAction('redflags',${i})">🚩 Flags</button>
-            <button class="psa-btn psa-gold psa-sm" onclick="runBatchAction('interview',${i})">🎯 Qs</button>
+            <button class="psa-btn psa-sm"
+              style="background:linear-gradient(135deg,#f72585,#7209b7);color:#fff;font-weight:700;"
+              onclick="ipToggleBatch(${i},this)">🎤 Pack</button>
           </div>
-        </div>`;
+        </div>
+        <div id="ip-panel-batch-${i}" style="display:none;padding:0 2px;"></div>`;
     }).join('');
 
     cta.className = 'batch-cta-panel';
@@ -7051,7 +7352,7 @@ async function runPostScreeningAction(action, encodedResume, encodedJD) {
     },
     interview: {
       label: '🎯 Interview Questions',
-      system: MODES.interview.systemPrompt,
+      system: (MODES.interview || MODES.screen).systemPrompt,
       request: 'Generate 3 technical and 2 behavioral interview questions tailored to this candidate and the job description.'
     }
   };
@@ -9183,6 +9484,373 @@ function ptDeleteTemplate(i) {
 // ═══════════════════════════════════════════════════════════════════
 // DASHBOARD PERSIST ACTION BAR — render after each generation (v19)
 // ═══════════════════════════════════════════════════════════════════
+
+
+// ═══════════════════════════════════════════════════════════════════
+// DASHBOARD LAYOUT EDITOR (v1) — Section hide / reorder / persist
+// Key: ra_dash_layout_v1::{type}  →  { order: [...ids], hidden: [...ids] }
+// ═══════════════════════════════════════════════════════════════════
+
+var _dashLayoutEditMode = false;
+
+function _dlKey(type) { return 'ra_dash_layout_v1::' + type; }
+
+function _dlLoad(type) {
+  try { return JSON.parse(localStorage.getItem(_dlKey(type))) || null; } catch(e) { return null; }
+}
+
+function _dlSave(type, layout) {
+  try { localStorage.setItem(_dlKey(type), JSON.stringify(layout)); } catch(e) {}
+}
+
+function _dlReset(type) {
+  try { localStorage.removeItem(_dlKey(type)); } catch(e) {}
+}
+
+// Get all .dash-sec elements from inside the iframe (preferred) or outer doc
+function _dlGetSections(type) {
+  var iframe = document.getElementById('dash-iframe-' + type);
+  if (iframe) {
+    try {
+      var iDoc = iframe.contentDocument || iframe.contentWindow.document;
+      if (iDoc) return Array.from(iDoc.querySelectorAll('.dash-sec'));
+    } catch(e) {}
+  }
+  // Fallback: sections injected directly into dash-content
+  var content = document.getElementById('dash-content');
+  if (content) return Array.from(content.querySelectorAll('.dash-sec'));
+  return [];
+}
+
+// Apply saved layout (order + hidden) after dashboard renders
+function dashApplyLayout(type) {
+  var layout = _dlLoad(type);
+  if (!layout) return;
+
+  // Wait for iframe to fully load before applying
+  var iframe = document.getElementById('dash-iframe-' + type);
+  if (iframe) {
+    var doApply = function() {
+      var secs = _dlGetSections(type);
+      if (!secs.length) return;
+      _dlApplyToSections(secs, layout);
+    };
+    // Try immediately + on load event
+    setTimeout(doApply, 300);
+    iframe.addEventListener('load', function() { setTimeout(doApply, 100); });
+    return;
+  }
+  // No iframe — apply directly
+  var secs = _dlGetSections(type);
+  if (secs.length) _dlApplyToSections(secs, layout);
+}
+
+function _dlApplyToSections(secs, layout) {
+  var parent = secs[0] && secs[0].parentNode;
+  if (!parent) return;
+
+  var order   = layout.order  || [];
+  var hidden  = layout.hidden || [];
+
+  // Build map id → element
+  var map = {};
+  secs.forEach(function(s) { map[s.dataset.secId] = s; });
+
+  // Reorder: move known ids first, append unknown at end
+  var reordered = [];
+  order.forEach(function(id) { if (map[id]) reordered.push(map[id]); });
+  secs.forEach(function(s) { if (reordered.indexOf(s) === -1) reordered.push(s); });
+
+  reordered.forEach(function(s) { parent.appendChild(s); });
+
+  // Apply visibility
+  reordered.forEach(function(s) {
+    var isHidden = hidden.indexOf(s.dataset.secId) !== -1;
+    s.style.display = isHidden ? 'none' : '';
+  });
+
+  // Resize all Chart.js charts in iframe after reorder
+  _dlResizeCharts(secs[0]);
+}
+
+function _dlResizeCharts(anySection) {
+  try {
+    var win = null;
+    var iframe = document.querySelector('iframe[id^="dash-iframe-"]');
+    if (iframe) win = iframe.contentWindow;
+    if (!win) win = window;
+    var C = win.Chart;
+    if (!C || !C.instances) return;
+    Object.keys(C.instances).forEach(function(k) {
+      try { C.instances[k].resize(); } catch(e) {}
+    });
+  } catch(e) {}
+}
+
+// Build current layout state from live DOM
+function _dlCurrentLayout(type) {
+  var secs = _dlGetSections(type);
+  var order  = secs.map(function(s) { return s.dataset.secId; });
+  var hidden = secs.filter(function(s) { return s.style.display === 'none'; })
+                   .map(function(s) { return s.dataset.secId; });
+  return { order: order, hidden: hidden };
+}
+
+// ── Layout Control Bar ────────────────────────────────────────────
+function dashRenderLayoutBar(type) {
+  var content = document.getElementById('dash-content');
+  if (!content) return;
+
+  // Remove any existing layout bar
+  var old = document.getElementById('dash-layout-bar');
+  if (old) old.parentNode.removeChild(old);
+
+  // Only show bar if there are dash-sec sections (after iframe loads)
+  var bar = document.createElement('div');
+  bar.id = 'dash-layout-bar';
+  bar.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 14px;background:#f0f4ff;border:1.5px solid #c7d2fe;border-radius:10px;margin-bottom:12px;flex-wrap:wrap;font-family:Outfit,sans-serif;font-size:0.75rem;';
+
+  var label = document.createElement('span');
+  label.style.cssText = 'font-weight:700;color:#4361ee;font-size:0.72rem;letter-spacing:.5px;text-transform:uppercase;margin-right:4px;';
+  label.textContent = '⚙️ Layout';
+  bar.appendChild(label);
+
+  // Edit toggle
+  var editBtn = document.createElement('button');
+  editBtn.id = 'dash-layout-edit-btn';
+  editBtn.style.cssText = 'padding:4px 12px;border-radius:7px;border:1.5px solid #4361ee;background:' + (_dashLayoutEditMode ? '#4361ee' : 'white') + ';color:' + (_dashLayoutEditMode ? 'white' : '#4361ee') + ';font-family:Outfit,sans-serif;font-size:0.73rem;font-weight:600;cursor:pointer;transition:all .15s;';
+  editBtn.textContent = _dashLayoutEditMode ? '✏️ Editing ON' : '✏️ Edit Layout';
+  editBtn.onclick = function() {
+    _dashLayoutEditMode = !_dashLayoutEditMode;
+    dashRenderLayoutBar(type);
+    _dlToggleEditOverlays(type, _dashLayoutEditMode);
+  };
+  bar.appendChild(editBtn);
+
+  // Save Layout
+  var saveBtn = document.createElement('button');
+  saveBtn.style.cssText = 'padding:4px 12px;border-radius:7px;border:1.5px solid #0a9c5a;background:white;color:#0a9c5a;font-family:Outfit,sans-serif;font-size:0.73rem;font-weight:600;cursor:pointer;';
+  saveBtn.textContent = '💾 Save Layout';
+  saveBtn.onclick = function() {
+    var layout = _dlCurrentLayout(type);
+    _dlSave(type, layout);
+    saveBtn.textContent = '✅ Saved!';
+    setTimeout(function() { saveBtn.textContent = '💾 Save Layout'; }, 1800);
+  };
+  bar.appendChild(saveBtn);
+
+  // Reset Layout
+  var resetBtn = document.createElement('button');
+  resetBtn.style.cssText = 'padding:4px 12px;border-radius:7px;border:1.5px solid #e5383b;background:white;color:#e5383b;font-family:Outfit,sans-serif;font-size:0.73rem;font-weight:600;cursor:pointer;';
+  resetBtn.textContent = '↺ Reset';
+  resetBtn.onclick = function() {
+    _dlReset(type);
+    _dashLayoutEditMode = false;
+    // Re-show all sections, restore original order
+    var secs = _dlGetSections(type);
+    secs.forEach(function(s) { s.style.display = ''; s.removeAttribute('draggable'); });
+    _dlToggleEditOverlays(type, false);
+    dashRenderLayoutBar(type);
+    var st = document.getElementById('status-text');
+    if (st) { st.textContent = '↺ Layout reset to default'; setTimeout(function(){ st.textContent=''; }, 2000); }
+  };
+  bar.appendChild(resetBtn);
+
+  // Restore hidden sections dropdown (only in edit mode)
+  if (_dashLayoutEditMode) {
+    var secs = _dlGetSections(type);
+    var hiddenSecs = secs.filter(function(s) { return s.style.display === 'none'; });
+    if (hiddenSecs.length > 0) {
+      var sep = document.createElement('span');
+      sep.style.cssText = 'color:#94a3b8;margin:0 2px;';
+      sep.textContent = '|';
+      bar.appendChild(sep);
+
+      var restoreLbl = document.createElement('span');
+      restoreLbl.style.cssText = 'color:#64748b;font-size:0.7rem;';
+      restoreLbl.textContent = 'Restore:';
+      bar.appendChild(restoreLbl);
+
+      hiddenSecs.forEach(function(s) {
+        var rb = document.createElement('button');
+        rb.style.cssText = 'padding:3px 9px;border-radius:6px;border:1.5px solid #94a3b8;background:#f8fafc;color:#475569;font-family:Outfit,sans-serif;font-size:0.7rem;cursor:pointer;';
+        rb.textContent = '👁 ' + (s.dataset.secTitle || s.dataset.secId);
+        rb.onclick = function() {
+          s.style.display = '';
+          _dlAddSectionControls(s, type);
+          dashRenderLayoutBar(type);
+        };
+        bar.appendChild(rb);
+      });
+    }
+  }
+
+  // Insert bar BEFORE the first child of content (so it sits above everything)
+  content.insertBefore(bar, content.firstChild);
+}
+
+// ── Section edit overlays ─────────────────────────────────────────
+function _dlToggleEditOverlays(type, on) {
+  var iframe = document.getElementById('dash-iframe-' + type);
+  var doIt = function() {
+    var secs = _dlGetSections(type);
+    if (!secs.length) {
+      // iframe may not have loaded yet — wait
+      if (iframe) { iframe.addEventListener('load', function() { setTimeout(function(){ _dlToggleEditOverlays(type, on); }, 150); }); }
+      return;
+    }
+    secs.forEach(function(s) {
+      if (on) {
+        _dlAddSectionControls(s, type);
+        s.setAttribute('draggable', 'true');
+      } else {
+        _dlRemoveSectionControls(s);
+        s.removeAttribute('draggable');
+      }
+    });
+    if (on) _dlInitDragDrop(type);
+  };
+  if (iframe) { setTimeout(doIt, 200); } else { doIt(); }
+}
+
+function _dlAddSectionControls(sec, type) {
+  // Don't double-add
+  if (sec.querySelector('.__dl-ctrl')) return;
+
+  var title = sec.dataset.secTitle || sec.dataset.secId || 'Section';
+
+  // Inject position:relative on section so the controls anchor correctly
+  if (getComputedStyle(sec).position === 'static') sec.style.position = 'relative';
+
+  var ctrl = document.createElement('div');
+  ctrl.className = '__dl-ctrl';
+  ctrl.style.cssText = 'position:absolute;top:6px;right:8px;z-index:9999;display:flex;gap:4px;align-items:center;background:rgba(255,255,255,0.95);border:1.5px solid #e2e8f0;border-radius:8px;padding:3px 6px;box-shadow:0 2px 8px rgba(0,0,0,.12);font-family:system-ui,sans-serif;';
+
+  var drag = document.createElement('span');
+  drag.textContent = '⠿';
+  drag.title = 'Drag to reorder';
+  drag.style.cssText = 'cursor:grab;font-size:14px;color:#94a3b8;line-height:1;user-select:none;';
+  ctrl.appendChild(drag);
+
+  var up = document.createElement('button');
+  up.textContent = '↑';
+  up.title = 'Move up';
+  up.style.cssText = 'border:none;background:none;cursor:pointer;font-size:13px;color:#4361ee;padding:0 2px;line-height:1;font-weight:700;';
+  up.onclick = function(e) { e.stopPropagation(); _dlMoveSection(sec, type, -1); };
+  ctrl.appendChild(up);
+
+  var dn = document.createElement('button');
+  dn.textContent = '↓';
+  dn.title = 'Move down';
+  dn.style.cssText = 'border:none;background:none;cursor:pointer;font-size:13px;color:#4361ee;padding:0 2px;line-height:1;font-weight:700;';
+  dn.onclick = function(e) { e.stopPropagation(); _dlMoveSection(sec, type, 1); };
+  ctrl.appendChild(dn);
+
+  var hide = document.createElement('button');
+  hide.textContent = '🗑';
+  hide.title = 'Hide section';
+  hide.style.cssText = 'border:none;background:none;cursor:pointer;font-size:12px;padding:0 2px;line-height:1;';
+  hide.onclick = function(e) {
+    e.stopPropagation();
+    sec.style.display = 'none';
+    dashRenderLayoutBar(type);
+  };
+  ctrl.appendChild(hide);
+
+  sec.appendChild(ctrl);
+
+  // Edit-mode outline
+  sec.style.outline = '2px dashed #c7d2fe';
+  sec.style.outlineOffset = '3px';
+}
+
+function _dlRemoveSectionControls(sec) {
+  var ctrl = sec.querySelector('.__dl-ctrl');
+  if (ctrl) ctrl.parentNode.removeChild(ctrl);
+  sec.style.outline = '';
+  sec.style.outlineOffset = '';
+}
+
+function _dlMoveSection(sec, type, dir) {
+  var parent = sec.parentNode;
+  if (!parent) return;
+  var secs = Array.from(parent.querySelectorAll('.dash-sec'));
+  var idx = secs.indexOf(sec);
+  var target = dir === -1 ? idx - 1 : idx + 1;
+  if (target < 0 || target >= secs.length) return;
+  var ref = secs[target];
+  if (dir === -1) {
+    parent.insertBefore(sec, ref);
+  } else {
+    parent.insertBefore(sec, ref.nextSibling);
+  }
+  _dlResizeCharts(sec);
+  dashRenderLayoutBar(type);
+}
+
+// ── HTML5 Drag-and-Drop ───────────────────────────────────────────
+var _dlDragSrc = null;
+
+function _dlInitDragDrop(type) {
+  var secs = _dlGetSections(type);
+  secs.forEach(function(s) {
+    s.removeEventListener('dragstart', s.__dlDragStart);
+    s.removeEventListener('dragover',  s.__dlDragOver);
+    s.removeEventListener('dragleave', s.__dlDragLeave);
+    s.removeEventListener('drop',      s.__dlDrop);
+    s.removeEventListener('dragend',   s.__dlDragEnd);
+
+    s.__dlDragStart = function(e) {
+      _dlDragSrc = s;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', s.dataset.secId);
+      setTimeout(function() { s.style.opacity = '0.4'; }, 0);
+    };
+    s.__dlDragOver = function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      s.style.boxShadow = '0 0 0 2px #4361ee';
+    };
+    s.__dlDragLeave = function() {
+      s.style.boxShadow = '';
+    };
+    s.__dlDrop = function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      s.style.boxShadow = '';
+      if (_dlDragSrc && _dlDragSrc !== s) {
+        var parent = s.parentNode;
+        // Insert _dlDragSrc before s
+        parent.insertBefore(_dlDragSrc, s);
+        _dlResizeCharts(s);
+        dashRenderLayoutBar(type);
+      }
+      return false;
+    };
+    s.__dlDragEnd = function() {
+      s.style.opacity = '';
+      _dlGetSections(type).forEach(function(x) { x.style.boxShadow = ''; });
+      _dlDragSrc = null;
+    };
+
+    s.addEventListener('dragstart', s.__dlDragStart);
+    s.addEventListener('dragover',  s.__dlDragOver);
+    s.addEventListener('dragleave', s.__dlDragLeave);
+    s.addEventListener('drop',      s.__dlDrop);
+    s.addEventListener('dragend',   s.__dlDragEnd);
+  });
+}
+
+// ── Also expose dash-sec detection inside parseDashResponse ──────
+// When the iframe loads, auto-wire drag-drop if layout edit mode is on
+(function() {
+  var _origPDR = window.parseDashResponse;
+  // Observe iframe load to trigger overlay re-init if edit mode was on
+  document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('click', function(e) {}, true);
+  });
+})();
+
 
 function dashRenderActionBar(type, label, analysisText, dashHtml) {
   var content = document.getElementById('dash-content');
