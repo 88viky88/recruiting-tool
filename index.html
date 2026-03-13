@@ -695,10 +695,9 @@ battle-config { grid-template-columns: 1fr; }
     <button class="mode-btn" onclick="showOutreachPanel()" id="btn-outreach"><span class="icon">✉️</span><span>Candidate Outreach</span></button>
     <button class="mode-btn" onclick="setMode('search')" id="btn-search"><span class="icon">🔍</span><span>Search String Builder</span></button>
     <button class="mode-btn pitch-btn" onclick="showPitchPanel()" id="btn-pitch"><span class="icon">🚀</span><span>Candidate Pitch Builder</span></button>
-    <button class="mode-btn" onclick="setMode('jd')" id="btn-jd"><span class="icon">📝</span><span>Write Job Description</span></button>
     <button class="mode-btn" onclick="setMode('general')" id="btn-general"><span class="icon">💬</span><span>General Assistant</span></button>
 
-    <button class="mode-btn battle active" onclick="showBattle()" id="btn-battle"><span class="icon">⚔️</span><span>Battle Cards Builder</span></button>
+    <button class="mode-btn battle" onclick="showBattle()" id="btn-battle"><span class="icon">⚔️</span><span>Battle Cards Builder</span></button>
 
     <div class="api-box">
       <label>🔑 API Provider</label>
@@ -1263,7 +1262,7 @@ battle-config { grid-template-columns: 1fr; }
       <!-- Tab switcher -->
       <div style="padding:14px 24px 0;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center;">
         <button class="otab active" id="otab-linkedin" onclick="switchOutreachTab('linkedin')">💼 LinkedIn InMail Generator</button>
-        <button class="otab" id="otab-personal" onclick="switchOutreachTab('personal')">✉️ Personal Outreach (AI Chat)</button>
+        <button class="otab" id="otab-personal" onclick="switchOutreachTab('personal')">✉️ Personal Outreach</button>
         <span style="margin-left:auto;font-size:0.68rem;color:var(--text-muted);">LinkedIn = Free &nbsp;·&nbsp; Personal = Uses your selected API key</span>
       </div>
       <!-- Projects: save bar -->
@@ -1414,7 +1413,7 @@ battle-config { grid-template-columns: 1fr; }
         </div>
         <div id="personal-chat" style="flex:1;overflow-y:auto;padding:16px 24px;display:flex;flex-direction:column;gap:12px;"></div>
         <div style="padding:12px 24px;background:var(--surface);border-top:1px solid var(--border);">
-          <div style="font-size:0.72rem;color:var(--accent);margin-bottom:6px;">✉️ Personal Outreach AI Chat</div>
+          <div style="font-size:0.72rem;color:var(--accent);margin-bottom:6px;">✉️ Personal Outreach</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;" id="personal-chips">
             <div class="chip" onclick="usePersonalChip('Write a personalized first outreach email')">First outreach email</div>
             <div class="chip" onclick="usePersonalChip('Write a warm follow-up (day 3)')">Day 3 follow-up</div>
@@ -1528,123 +1527,9 @@ battle-config { grid-template-columns: 1fr; }
 
       <div class="pt-section-head">Saved Templates</div>
       <div id="pt-templates-list">
-        <div class="pt-empty">No templates yet.<br>Save settings below to create one.</div>
+        <div class="pt-empty">No templates yet.<br>Save a template from the Candidate Outreach panel.</div>
       </div>
 
-      <hr class="pt-divider"/>
-      <div class="pt-section-head">Save New Template</div>
-
-      <div class="pt-field">
-        <label class="pt-label">Template Name *</label>
-        <input class="pt-input" id="pt-tpl-name" placeholder="e.g. Warm Outreach — CV Ask" maxlength="60"/>
-      </div>
-      <div class="pt-field">
-        <label class="pt-label">Type</label>
-        <select class="pt-input" id="pt-tpl-type" onchange="ptTplTypeChange()">
-          <option value="outreach">✉️ Outreach</option>
-          <option value="screening">📋 Screening</option>
-          <option value="battlecards">⚔️ Battle Cards</option>
-        </select>
-      </div>
-
-      <!-- Outreach template options -->
-      <div id="pt-tpl-outreach" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;">
-        <div style="font-size:0.72rem;font-weight:700;color:var(--accent);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">Outreach Settings</div>
-        <div class="pt-field">
-          <label class="pt-label">Tone</label>
-          <select class="pt-input" id="pt-tpl-ol-tone">
-            <option value="warm_professional">Warm &amp; Professional</option>
-            <option value="direct">Direct &amp; Concise</option>
-            <option value="peer_peer">Peer-to-Peer</option>
-            <option value="formal">Formal</option>
-          </select>
-        </div>
-        <div class="pt-field">
-          <label class="pt-label">Default CTA Mode</label>
-          <select class="pt-input" id="pt-tpl-ol-cta">
-            <option value="cv">📄 Direct CV Ask</option>
-            <option value="call">📞 Interest + Call</option>
-          </select>
-        </div>
-        <div class="pt-field">
-          <label class="pt-label">Default Follow-ups</label>
-          <select class="pt-input" id="pt-tpl-ol-fu">
-            <option value="1">1 follow-up</option>
-            <option value="2">2 follow-ups</option>
-            <option value="3">3 follow-ups</option>
-          </select>
-        </div>
-        <div class="pt-field">
-          <label class="pt-label">Word Range (per message)</label>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <input class="pt-input" id="pt-tpl-ol-wmin" type="number" min="30" max="300" value="80" style="width:80px;"/>
-            <span style="font-size:0.8rem;color:var(--text-muted);">to</span>
-            <input class="pt-input" id="pt-tpl-ol-wmax" type="number" min="60" max="500" value="120" style="width:80px;"/>
-            <span style="font-size:0.8rem;color:var(--text-muted);">words</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Screening template options -->
-      <div id="pt-tpl-screening" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;">
-        <div style="font-size:0.72rem;font-weight:700;color:var(--accent);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">Screening Settings</div>
-        <div class="pt-field">
-          <label class="pt-label">Verdict Rubric</label>
-          <select class="pt-input" id="pt-tpl-sc-rubric">
-            <option value="strong_yes_no_maybe">Strong Yes / Yes / Maybe / No</option>
-            <option value="percentage">Match % Score</option>
-            <option value="tier_abc">Tier A / B / C</option>
-            <option value="custom">Custom (describe below)</option>
-          </select>
-        </div>
-        <div class="pt-field">
-          <label class="pt-label">Custom Rubric Description</label>
-          <textarea class="pt-input" id="pt-tpl-sc-rubric-custom" rows="2" placeholder="Describe your custom scoring rubric…"></textarea>
-        </div>
-        <div class="pt-field">
-          <label class="pt-label">Output Format</label>
-          <div class="pt-check-row"><input type="checkbox" id="pt-tpl-sc-gaps" checked/><label for="pt-tpl-sc-gaps">Include gap analysis</label></div>
-          <div class="pt-check-row"><input type="checkbox" id="pt-tpl-sc-redflags" checked/><label for="pt-tpl-sc-redflags">Include red flags</label></div>
-          <div class="pt-check-row"><input type="checkbox" id="pt-tpl-sc-qs" checked/><label for="pt-tpl-sc-qs">Include interview questions</label></div>
-          <div class="pt-check-row"><input type="checkbox" id="pt-tpl-sc-summary"/><label for="pt-tpl-sc-summary">Include exec summary only</label></div>
-        </div>
-      </div>
-
-      <!-- Battle Cards template options -->
-      <div id="pt-tpl-battlecards" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;">
-        <div style="font-size:0.72rem;font-weight:700;color:var(--accent);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">Battle Cards Settings</div>
-        <div class="pt-field">
-          <label class="pt-label">Default Mode</label>
-          <select class="pt-input" id="pt-tpl-bc-mode">
-            <option value="quick">⚡ Quick (summary matrix + talk tracks)</option>
-            <option value="standard">📋 Standard (all sections A+B+C+D)</option>
-            <option value="deep">🔬 Deep (add financial + leadership signals)</option>
-          </select>
-        </div>
-        <div class="pt-field">
-          <label class="pt-label">Default Freshness Window</label>
-          <select class="pt-input" id="pt-tpl-bc-freshness">
-            <option>Last 6 months</option>
-            <option>Last 12 months</option>
-            <option>Last 18 months</option>
-            <option>Last 24 months</option>
-          </select>
-        </div>
-        <div class="pt-field">
-          <label class="pt-label">Default Seniority</label>
-          <select class="pt-input" id="pt-tpl-bc-seniority">
-            <option>Senior OR Staff OR Principal</option>
-            <option>Senior</option>
-            <option>Staff</option>
-            <option>Manager / Director</option>
-            <option>Junior / Entry</option>
-          </select>
-        </div>
-      </div>
-
-      <button class="pt-btn-primary" onclick="ptSaveTemplate()" style="width:100%;">📋 Save Template</button>
-      <div class="pt-inline-msg" id="pt-tpl-msg"></div>
-    </div>
 
     <!-- ── IMPORT / EXPORT ── -->
     <div class="pt-section" id="ptsec-import">
@@ -1987,52 +1872,89 @@ BATCH MODE: Repeat full block per candidate, then add:
   search: {
     label: '🔍 Search String Builder',
     chips: ['Boolean (LinkedIn)', 'Google X-Ray', 'GitHub Search', 'Xing Search', 'Behance Search', 'Dribbble Search', 'Stack Overflow Search', 'Twitter / X Search', 'Google Patent Search', 'Google Scholar Search'],
-    systemPrompt: `You are a senior talent sourcing specialist with deep expertise in Boolean search, X-Ray sourcing, and advanced search operators across every major platform. You understand how LinkedIn's algorithm works, how GitHub indexing behaves, and how to construct searches that surface passive candidates the average recruiter can't find.
+    systemPrompt: `You are a world-class talent sourcing specialist who has built candidate pipelines at Google, Stripe, Databricks, and top-tier startups. You find candidates the average recruiter cannot. Your Boolean strings are precise, your X-Ray queries surface passive profiles, and your sourcing tips actually work.
 
-WHEN GENERATING A SEARCH STRING:
+YOUR SOURCING PHILOSOPHY:
+- A search string is a hypothesis about where the best candidate is hiding. Every operator is a deliberate choice, not a guess.
+- Precision beats recall. A tight string with 40 strong profiles beats a wide string with 400 mediocre ones.
+- The best candidates are not actively applying. Your job is to find the person who is not looking.
+- Platform intelligence matters: LinkedIn surfaces title keywords; GitHub surfaces what they actually build; Stack Overflow surfaces how they think.
 
-1. UNDERSTAND THE ROLE FIRST
-   Before writing a single operator, identify:
-   - The core title(s) — include synonyms and alternative titles (e.g. "Machine Learning Engineer" OR "ML Engineer" OR "AI Engineer")
-   - The must-have skills — primary tech stack, frameworks, domain expertise
-   - The seniority signal — years, title keywords (Senior, Staff, Principal, Lead, Head)
-   - The exclusions — titles/terms to filter OUT (e.g. -intern -student -recruiter -HR)
-   - The geography/company context if given
+BEFORE WRITING ANY STRING — do this reasoning silently:
+1. What is the EXACT sub-discipline? (not "Sales" — "Enterprise AE closing $500K+ deals with 9-month cycles"; not "Engineer" — "Staff backend engineer owning distributed data infrastructure")
+2. What titles would this person actually hold? List 4-6 variants including abbreviations, alternative names, adjacent titles.
+3. What companies would they come from? Name 5-8 specific companies where this profile is common. Use these in target-company searches.
+4. What would their GitHub/portfolio/writing look like? What projects, repos, or communities would they be active in?
+5. What exclusions reduce noise? (students, recruiters, professors, unrelated adjacent roles)
 
-2. CONSTRUCT THE STRING
-   - Use proper Boolean: AND, OR, NOT (or platform-specific equivalents)
-   - Wrap multi-word phrases in quotes: "machine learning"
-   - Use parentheses to group OR clusters: (Python OR Go OR Rust)
-   - Prioritise precision over recall — a tighter string finds better candidates
-   - Add title variants, common abbreviations, and role synonyms
-   - For LinkedIn: use "title:" operators and location filters where relevant
-   - For X-Ray: construct a site:linkedin.com/in/ Google query with filetype/location tricks
-   - For GitHub: use language: and location: operators, relevant orgs, stars signals
-   - For Stack Overflow: use [tag] operators and profile-level terms
+PLATFORM-SPECIFIC INTELLIGENCE:
 
-3. OUTPUT FORMAT (always follow this exactly):
+LINKEDIN BOOLEAN:
+- Use title:"exact phrase" to target titles precisely
+- Combine OR clusters in parentheses: ("Staff Engineer" OR "Principal Engineer" OR "Senior Staff Engineer")
+- Use NOT to exclude noise: NOT (intern OR student OR professor OR recruiter)
+- Location: add city names or use LinkedIn's location filter, not "location:" operator (LinkedIn ignores it in search bar)
+- Company targeting: company:"Stripe" OR company:"Databricks" for talent from specific orgs
+- EXAMPLE for Staff Backend Engineer in Bangalore:
+  title:("Staff Engineer" OR "Principal Engineer" OR "Senior Software Engineer") ("distributed systems" OR "Kafka" OR "Kubernetes") ("Bangalore" OR "Bengaluru") NOT (intern OR student OR recruiter)
 
-**[Platform] Search String:**
-[search string here — copy-paste ready]
+X-RAY (Google → LinkedIn):
+- Base: site:linkedin.com/in/ "[title]" "[skill]" "[location]"
+- Add filetype:pdf for resume pages; use inurl: for specific path patterns
+- EXAMPLE: site:linkedin.com/in/ ("software engineer" OR "SWE") ("Apache Kafka" OR "Flink") ("Bangalore" OR "Bengaluru") -intitle:"jobs" -intitle:"recruiter"
+- Add company targeting: ("ex-Google" OR "ex-Stripe" OR "formerly" OR "Google" OR "Stripe")
+
+GITHUB:
+- Search repos: language:Python stars:>50 location:Bangalore
+- Search users: type:user language:Go location:"San Francisco"
+- Find contributors to relevant OSS projects: look at contributors to apache/kafka, tensorflow/tensorflow, etc.
+- EXAMPLE for ML engineers: language:Python stars:>20 "pytorch" OR "transformers" location:India
+
+STACK OVERFLOW:
+- Use [tags] for technology filtering: [python] [django] [postgresql]
+- Target users with high reputation (>5000) in relevant tags
+- X-Ray: site:stackoverflow.com/users "[skill tag]" "[location]"
+
+TWITTER/X SOURCING:
+- Find engineers who write about their work: search for "[technology] I built" or "shipped [product]"
+- Target followers of key company/tech accounts in your space
+
+OUTPUT FORMAT — always produce all of these:
+
+**Primary Search String ([Platform]):**
+[copy-paste ready string]
 
 **Why this works:**
-[2–3 sentences explaining the logic — title variants chosen, skills prioritised, key exclusions]
+[2-3 sentences: which title variants were chosen and why, which skills are anchoring the search, what the exclusions cut out]
 
-**Variations to try:**
-[2 alternative strings — one broader, one more niche/specific]
+**Tighter variant (higher precision):**
+[string that narrows further — adds must-have skill or company target]
 
-**Sourcing tips for this role:**
-[2–3 actionable tips — communities, niche platforms, GitHub orgs, relevant conferences, where this talent actually hangs out]
+**Broader variant (higher recall):**
+[string that widens — removes one constraint to catch adjacent profiles]
+
+**Top 5 target companies for this role:**
+[companies where this profile is most commonly found — be specific, not "big tech companies"]
+
+**Sourcing tips:**
+[3 actionable tips — specific communities, Slack groups, GitHub orgs, conferences, newsletters, subreddits where this talent actually is]
+
+WORKED EXAMPLE — Enterprise AE (SaaS, India):
+Primary (LinkedIn): title:("Enterprise Account Executive" OR "Enterprise AE" OR "Senior Account Executive") ("SaaS" OR "cloud" OR "B2B software") ("Mumbai" OR "Bangalore" OR "Delhi" OR "India") NOT (intern OR SDR OR BDR OR recruiter)
+Why: Targets AE-level titles specifically, anchors on SaaS/cloud to exclude hardware/FMCG sales, India location cluster
+Tighter: adds ("Salesforce" OR "SAP" OR "Oracle" OR "Zoho" OR "Freshworks") to target people from known enterprise SaaS
+Broader: removes SaaS anchor, adds ("enterprise sales" OR "strategic accounts" OR "large accounts")
+Target companies: Salesforce India, SAP India, Oracle India, Zoho, Freshworks, ServiceNow India, Workday India
+Tips: LinkedIn Sales Navigator "enterprise software" filter; check attendees of SaaStr India; Slack communities like Revenue Collective India
 
 RULES:
-- Never produce a generic string — every string must be tailored to the specific role
-- Always include NOT/-/exclusions to reduce noise
-- Always provide the "Why this works" explanation so the recruiter can adapt it
-- If the user doesn't specify a platform, default to LinkedIn Boolean + X-Ray
-- For technical roles: include specific framework/tool names, not just language names
-- For GTM/Sales: include territory, segment, vertical signals where relevant
-- For leadership: include "Head of", "VP", "Director", "Lead" variants
-- If asked for multiple platforms: generate all requested, each with its own Why/Variations/Tips`,
+- Never produce a generic string — every string must reflect the specific role details given
+- Always include exclusions (-intern, NOT recruiter, etc.)
+- Always explain why the string works — so the recruiter can adapt it themselves
+- If platform is not specified: default to LinkedIn Boolean + Google X-Ray, both
+- For technical roles: include specific tools/frameworks, not just programming languages
+- For leadership: include "Head of", "VP", "Director" + "Lead" variants
+- For India: include city name variants (Bangalore/Bengaluru, Mumbai/Bombay)`,
     contextGroups: [],
     placeholder: 'Describe the role/skills to search for (e.g., "ML Engineer, PyTorch, NLP, India")...'
   },
@@ -2315,69 +2237,67 @@ OVERALL SIGNAL: Proceed confidently / Proceed with these questions / Significant
   general: {
     label: '💬 General Recruiting Assistant',
     chips: ['Salary benchmarking tips', 'How to source passive candidates', 'Writing a rejection email', 'Improving offer acceptance', 'How do I use this tool?', 'What can Battle Cards do?'],
-    systemPrompt: `You are a world-class recruiting strategist and the expert guide for this AI Recruiting Tool. You operate at two levels simultaneously:
+    systemPrompt: `You are a world-class recruiting strategist, talent advisor, and the expert guide for this AI Recruiting Tool. You have 15+ years placing talent at Google, Stripe, Databricks, Flipkart, Zepto, Razorpay, and CRED. You operate like a trusted senior advisor — direct, specific, and always giving the actual answer rather than a hedge.
 
-LEVEL 1 — DEEP RECRUITING EXPERTISE
-You have expertise across every dimension of talent acquisition and people strategy:
+YOUR OPERATING PRINCIPLES:
+1. GIVE THE REAL ANSWER. When someone asks "should I require 5 years experience for this role?" — answer it. Don't say "it depends." Give your recommendation, then explain why.
+2. BE SPECIFIC. "Post on LinkedIn and Naukri" is useless advice. "On Naukri, use the 'Active in last 30 days' filter and Boolean title:"data engineer" — you will get 40% better response rates" is useful advice.
+3. NO HEDGING. You are not a liability disclaimer. You are an expert. When you know the answer, say it. When you do not, say what you would need to know to answer it.
+4. CITE REAL THINGS. Real tools (Naukri, iimjobs, LinkedIn Recruiter Lite, Levels.fyi, Radford, Carta). Real numbers (India SDE2 base in Bangalore is ₹28-45 LPA at product companies as of 2024). Real frameworks (STAR, Topgrading, scorecard hiring).
+5. INDIA MARKET FLUENCY. You know CTC structure (fixed + variable + joining bonus + ESOPs). You know that ₹50 LPA at a startup ≠ ₹50 LPA at TCS. You know Naukri/iimjobs/LinkedIn sourcing dynamics. You know the cultural context of notice periods (90 days is standard, 60 is negotiable, 30 is exceptional).
+
+DEEP EXPERTISE ACROSS:
 
 SOURCING & PIPELINE:
-- Boolean search, X-Ray, GitHub/LinkedIn/Stack Overflow sourcing, passive candidate strategies
-- Building talent pipelines for hard-to-fill roles (ML engineers, security specialists, enterprise sales, niche fintech)
-- Sourcing for diversity — where to find underrepresented talent, blind sourcing techniques, inclusive JD language
-- Employer branding that attracts vs repels the right candidates
+- Boolean and X-Ray on LinkedIn, Naukri, GitHub, Stack Overflow, iimjobs, AngelList
+- Passive candidate strategies: identifying who is likely to move (3+ years at same level, company going through layoffs, recent funding at target companies)
+- Building pipelines for hard-to-fill roles: ML engineers, security specialists, enterprise SaaS AEs, niche fintech/infra
+- Diversity sourcing: where to actually find underrepresented talent, not just "post on diverse job boards"
 
 SCREENING & ASSESSMENT:
-- Resume evaluation frameworks for every function: Engineering, Product, Security, Sales, GTM, Marketing, Finance, Legal, Operations, People
-- Sub-discipline awareness: SMB AE ≠ Enterprise AE, Data Analyst ≠ Data Engineer, IAM Security ≠ D&R Security
-- Structured interviews: competency-based, behavioural (STAR), technical assessments, case studies
-- Screening for culture-add vs culture-fit, high-EQ signals, leadership potential
-- Red flag patterns: title inflation, keyword stuffing, job hopping context, scope vagueness
-- Reference check frameworks — what questions actually reveal character
+- Resume evaluation for every function: Engineering, Product, Security, Sales, GTM, Marketing, Finance, Legal, Operations, People/HR
+- Sub-discipline precision: SMB AE ≠ Enterprise AE; Data Analyst ≠ Data Engineer; IAM Security ≠ D&R Security; HRBP ≠ TA ≠ L&D
+- Structured interviews: competency-based, STAR behavioural, technical deep-dives, case studies
+- Scoring calibration: what a "strong yes" looks like vs a "leaning yes" — how to avoid grade inflation in debrief
+- Red flag patterns with context: 18-month tenure at a Series A that went bust is different from 18-month tenure at a stable company
 
 COMPENSATION & OFFERS:
-- Benchmarking methodology: how to use Levels.fyi, Radford, Mercer, LinkedIn Salary, Glassdoor correctly
-- Equity compensation: RSU vs options, vesting schedules, cliff, dilution, strike price conversations
-- Offer construction: base/bonus/equity/benefits trade-offs, total comp framing
-- Negotiation strategy: how to handle counter-offers, competing offers, candidate re-engagement
-- India market specifics: CTC structure, PF/gratuity, variable pay, ESOP taxation nuances
-- Global compensation: remote hiring across time zones, contractor vs FTE considerations
+- India market benchmarking: how to use Levels.fyi for product companies, what Naukri salary data is actually worth (not much), when to use compensation surveys
+- CTC structuring: base/variable/ESOPs/joining bonus trade-offs; how to present total comp to candidates
+- Offer negotiation: how to hold on equity, how to handle counter-offers, when to walk away
+- Equity conversations: explain cliff, vesting, dilution, strike price in plain language to candidates who have never had ESOPs
 
-PROCESS & OPERATIONS:
-- Interview process design: number of rounds, who interviews, scorecards, debrief structure
-- ATS configuration, pipeline metrics, funnel conversion optimisation
-- Time-to-hire reduction strategies, recruiter capacity planning
-- Hiring manager partnership: briefing calls, feedback loops, calibration sessions
-- Candidate experience: communication cadence, rejection with care, offer delivery
+PROCESS DESIGN:
+- Interview loops: how many rounds, who should be in each, what each round is testing
+- Debrief structure: how to run a 30-min debrief that actually reaches a decision
+- Scorecard design: what good hiring criteria look like vs vague criteria ("culture fit", "smart")
+- Time-to-hire optimization: where pipelines stall and how to fix them
 
-STRATEGY & LEADERSHIP:
-- Building a recruiting function from scratch (0 to 1)
-- Scaling hiring: from 10 hires/year to 200+
-- Diversity, equity, and inclusion in hiring: structured interviews, diverse slates, bias mitigation
-- Executive and leadership hiring: search firm vs in-house, assessment centres, reference networks
-- Employer brand strategy: EVP development, Glassdoor management, social presence
+CANDIDATE EXPERIENCE & CLOSING:
+- How to pitch a role to a passive candidate who is not looking
+- Handling objections: "your company is too small", "I already have an offer", "I want more equity"
+- Closing mechanics: what to say in the offer call vs the offer letter vs the Day 1 check-in
 
-LEVEL 2 — TOOL GUIDE
-You know this tool completely. Help users get the most out of every feature:
-
-- **Resume Screening**: Upload resume(s) + JD → get fit verdict, match score, gap analysis, batch ranking. Works for single or bulk screening. Supports Engineering, Sales, GTM, Marketing, Finance, Security, Operations, Product, People roles.
-- **Search Strings**: Boolean (LinkedIn), X-Ray (Google), GitHub, Stack Overflow, Xing, Behance, Dribbble, Twitter/X, Google Patents, Google Scholar. Always tailored with title variants, exclusions, and sourcing tips.
-- **JD Writer**: Creates inclusive, optimised job descriptions with Required vs Preferred clearly separated. Avoids inflated requirements and biased language. Optimised for Naukri, LinkedIn, Indeed.
-- **Outreach**: LinkedIn InMail and personal email — 2 variants per candidate, specific hooks, banned phrases list. Includes follow-up ping. Works from resume or template mode.
-- **Gap Analysis**: Requirement-by-requirement breakdown with evidence quality ratings. Covers all domains. Identifies sub-discipline mismatches explicitly.
-- **Red Flags Check**: Universal + domain-specific flags (Engineering, Sales, Security, Marketing, Finance, People/HR). Probing questions for each flag.
-- **Interview Pack**: Technical questions (increasing difficulty), STAR behavioural, risk validation, scoring rubric, closing/sell questions.
-- **Dashboard**: Upload CSV/Excel/PDF recruiting data → AI-generated analytics dashboard with charts, trends, pipeline health.
-- **Battle Cards**: Competitive intelligence vs any company — win angles, objections, talking points. For recruiter conversations.
-- **Projects**: Save work in named projects. Export/import JSON. Persist across sessions.
-- **Profile**: Set name, email, company once — auto-fills everywhere.
+TOOL GUIDE — you know this tool completely:
+- Resume Screening: upload resume(s) + JD → fit verdict, match score, gap analysis, batch ranking. Works for single or bulk. All functions.
+- Search Strings: Boolean (LinkedIn), X-Ray (Google), GitHub, Stack Overflow, Naukri, iimjobs. Always tailored with title variants, exclusions, sourcing tips.
+- Outreach: LinkedIn InMail + personal email — 3 variants, specific hooks, banned phrases enforced. Works from resume or template mode.
+- Gap Analysis: requirement-by-requirement breakdown with evidence quality. Sub-discipline mismatches named explicitly.
+- Red Flags: universal + domain-specific flags. Probing questions for each flag.
+- Interview Pack: questions by difficulty, STAR behavioural, risk validation, scoring rubric.
+- Dashboard: upload CSV/Excel/PDF → AI analytics with charts, trends, pipeline health.
+- Battle Cards: competitive intelligence vs any company — win angles, objections, talking points.
+- Candidate Pitch Builder: upload resume → extract signals → company comparison → 60-90 sec pitch + hooks + objection handling.
+- Projects: save work, export/import JSON, persist across sessions.
+- Profile: set name/email/company once — auto-fills everywhere.
 
 HOW TO RESPOND:
-- Be direct and specific. No hedging, no filler.
-- When answering recruiting questions, give your actual recommendation — not a list of generic options.
-- When guiding tool use, tell them exactly what to do and what to expect.
-- When something has a right answer (e.g. "should I require a degree for this role?"), give the right answer.
-- Cite real frameworks, real tools, real market data where relevant.
-- For India-specific questions: apply knowledge of Indian hiring market, CTC norms, Naukri/LinkedIn/iimjobs sourcing, and cultural context.`,
+- Direct and specific. No filler.
+- Give your actual recommendation, not a menu of options for the recruiter to choose from.
+- When the answer is "it depends", name what it depends on and give the answer for each scenario.
+- Cite real tools, real market data, real frameworks.
+- For India questions: apply Indian hiring market knowledge — CTC norms, notice periods, Naukri/LinkedIn/iimjobs dynamics, ESOP culture, city-specific talent pools.
+- When guiding tool use: tell them exactly what to input and what output to expect.`,
     contextGroups: [],
     placeholder: 'Ask me anything about recruiting — or how to use any feature of this tool...'
   }
@@ -6690,6 +6610,13 @@ function setMode(mode) {
   if (bfi) bfi.value = '';
   const ctx_res = document.getElementById('ctx-resume');
   if (ctx_res) ctx_res.value = '';
+  // Clear context input fields so new mode starts fresh
+  const ctxJd = document.getElementById('ctx-jd');
+  if (ctxJd) ctxJd.value = '';
+  const ctxRes = document.getElementById('ctx-resume');
+  if (ctxRes) ctxRes.value = '';
+  const userInp = document.getElementById('user-input');
+  if (userInp) userInp.value = '';
   // For non-screen modes that use resume, default to paste tab
   if (mode !== 'screen') {
     switchResumeTab('paste');
@@ -7061,6 +6988,8 @@ var resetPitch = pbReset; // alias for consistency
 
 // ── First-run profile check ──
 rpCheckFirstRun();
+// Show dashboard as default landing screen
+showDashboard();
 
 // ══════════════════════════════════════════════════════
 // MAIN GENERATE — strict 4-step workflow per spec
@@ -8663,16 +8592,31 @@ function showOutreachPanel() {
   const sideKey = document.getElementById('api-key').value.trim();
   const olKey = document.getElementById('ol-groq-key');
   if (olKey && isKeyValid(sideKey) && !olKey.value.trim()) olKey.value = sideKey;
+  // ── Clear all outreach fields so panel starts fresh every visit ──
+  // LinkedIn InMail tab
+  ['ol-jd','ol-url','ol-sample','ol-location'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  var olResults = document.getElementById('ol-results');
+  if (olResults) olResults.style.display = 'none';
+  var olErr = document.getElementById('ol-error');
+  if (olErr) { olErr.style.display = 'none'; olErr.innerHTML = ''; }
+  var olCards = document.getElementById('ol-msg-cards');
+  if (olCards) olCards.innerHTML = '';
+
+  // Personal outreach tab
+  ['personal-jd','personal-resume','personal-input'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  var pChat = document.getElementById('personal-chat');
+  if (pChat) pChat.innerHTML = '';
+  personalHistory = [];
+  personalFileText = '';
+
   // default to linkedin tab
   switchOutreachTab('linkedin');
-  // Auto-extract location from JD if location field is empty
-  setTimeout(function() {
-    var locEl = document.getElementById('ol-location');
-    var jdEl  = document.getElementById('ol-jd');
-    if (locEl && (!locEl.value.trim()) && jdEl && jdEl.value.trim()) {
-      olAutoExtractLocation(jdEl.value);
-    }
-  }, 100);
 }
 
 async function olAutoExtractLocation(jdText) {
@@ -8884,11 +8828,39 @@ async function olGenerateEnriched() {
   const fuNow    = olFU;
 
   document.getElementById('ol-error').style.display = 'none';
-  if (!jd)  { const e=document.getElementById('ol-error'); e.textContent='Please paste the Job Description.'; e.style.display='block'; return; }
+
+  const btn = document.getElementById('ol-generate-enriched-btn');
+
+  // ── Clean JD: strip common webpage boilerplate that breaks generation ──
+  let cleanJD = jd;
+  const boilerplatePatterns = [
+    /do not sell my information[\s\S]{0,300}/gi,
+    /modern slavery policy[\s\S]{0,200}/gi,
+    /cookie preferences[\s\S]{0,200}/gi,
+    /copyright\s*©[\s\S]{0,300}/gi,
+    /privacy policy[\s\S]{0,100}/gi,
+    /terms of (use|service)[\s\S]{0,100}/gi,
+    /all rights reserved[\s\S]{0,100}/gi,
+    /\[object Object\]/g,
+  ];
+  boilerplatePatterns.forEach(p => { cleanJD = cleanJD.replace(p, ''); });
+  cleanJD = cleanJD.replace(/\n{3,}/g, '\n\n').trim();
+
+  // Warn if cleaned JD looks like just a footer / too short to use
+  if (cleanJD.length < 200) {
+    const e = document.getElementById('ol-error');
+    e.innerHTML = '⚠️ The text in the Job Description field looks like a webpage footer, not an actual job description.<br><small>Please paste the actual JD content (role summary, responsibilities, requirements) — not the full webpage.</small>';
+    e.style.display = 'block';
+    btn.disabled = false;
+    btn.innerHTML = '✨ Generate Outreach Messages';
+    return;
+  }
+
+  // Replace jd with cleaned version for all downstream use
+  const jdForProcessing = cleanJD;
   if (!url) { const e=document.getElementById('ol-error'); e.textContent='Please enter the Job URL.'; e.style.display='block'; return; }
   if (!isKeyValid(groqKey)) { const e=document.getElementById('ol-error'); e.innerHTML='Please enter your API key in the sidebar first.'; e.style.display='block'; return; }
 
-  const btn = document.getElementById('ol-generate-enriched-btn');
   btn.disabled = true;
   document.getElementById('ol-generate-btn').disabled = true;
   document.getElementById('ol-results').style.display = 'none';
@@ -8897,7 +8869,7 @@ async function olGenerateEnriched() {
   btn.innerHTML = '<span class="ol-spinner"></span>Step 1/3: Extracting company intel...';
   let companyName = 'the company';
   try {
-    const ex = (await callAISimple('Reply with ONLY the hiring company name, nothing else:\n\n'+jd, 20, 0)).trim();
+    const ex = (await callAISimple('Reply with ONLY the hiring company name, nothing else:\n\n'+jdForProcessing, 20, 0)).trim();
     if (ex && ex.length < 80) companyName = ex;
     document.getElementById('ol-db-company').textContent = companyName;
     document.getElementById('ol-db-company-wrap').style.display = 'inline';
@@ -8907,23 +8879,26 @@ async function olGenerateEnriched() {
 
   // Step 2: Deep role intelligence
   btn.innerHTML = '<span class="ol-spinner"></span>Step 2/3: Analysing role intelligence...';
-  let roleTitle='the role', coreChallenge='', companyUSP='', keySkills='', careerImpact='', contractType='Full-time', teamMission='';
+  let roleTitle='the role', coreChallenge='', companyUSP='', keySkills='', careerImpact='', contractType='Full-time', teamMission='', scaleSignal='';
   try {
     const intel = await callAISimple(
-      'Analyse this JD and reply in EXACT format below, no extra text:\n' +
-      'ROLE_TITLE: [value]\n' +
-      'CORE_CHALLENGE: [1 sentence — the #1 technical/business problem this person solves]\n' +
-      'COMPANY_USP: [1 sentence — what makes this company or team genuinely stand out]\n' +
-      'KEY_SKILLS: [top 3 specific skills/tech, comma-separated]\n' +
-      'CAREER_IMPACT: [1 sentence — career growth or impact this role gives the candidate]\n' +
-      'CONTRACT_TYPE: [e.g. Full-time permanent, Contract, etc.]\n' +
-      'TEAM_MISSION: [1 sentence — the team mission]\n\n' +
-      'JD:\n---\n' + jd + '\n---', 400, 0);
+      'Extract recruiting intel from this JD. Be SPECIFIC — vague outputs produce generic messages. No platitudes.\n' +
+      'Reply in EXACT format, nothing else:\n' +
+      'ROLE_TITLE: [exact market-standard title]\n' +
+      'CORE_CHALLENGE: [hardest specific problem this role solves. BAD: building scalable systems. GOOD: rebuilding event routing handling 50M msgs/day that breaks at peak]\n' +
+      'COMPANY_USP: [one concrete differentiator. BAD: great culture. GOOD: only Kafka-native cloud with sub-10ms p99 at this scale]\n' +
+      'KEY_SKILLS: [top 3 specific tools — exact names. BAD: cloud backend. GOOD: Kafka Go Kubernetes]\n' +
+      'CAREER_SIGNAL: [what this unlocks. BAD: great growth. GOOD: own full data plane end-to-end no legacy]\n' +
+      'SCALE_SIGNAL: [real number or scope — users revenue volume team size. Write not specified if absent]\n' +
+      'CONTRACT_TYPE: [Full-time permanent / Contract / etc.]\n' +
+      'TEAM_SIGNAL: [specific team pull factor. BAD: passionate talented team. GOOD: 8-person team ex-Stripe infra ships fortnightly]\n\n' +
+      'JD:\n---\n' + jdForProcessing + '\n---', 600, 0);
     const g = (label) => { const m=intel.match(new RegExp(label+':\\s*(.+)')); return m?m[1].trim():''; };
     roleTitle=g('ROLE_TITLE')||'the role'; coreChallenge=g('CORE_CHALLENGE');
     companyUSP=g('COMPANY_USP'); keySkills=g('KEY_SKILLS');
-    careerImpact=g('CAREER_IMPACT'); contractType=g('CONTRACT_TYPE')||'Full-time';
-    teamMission=g('TEAM_MISSION');
+    careerImpact=g('CAREER_SIGNAL')||g('CAREER_IMPACT'); contractType=g('CONTRACT_TYPE')||'Full-time';
+    teamMission=g('TEAM_SIGNAL')||g('TEAM_MISSION');
+    scaleSignal=g('SCALE_SIGNAL')||'';
   } catch(err) { console.warn('Intel extract failed'); }
 
   // Step 3: Generate enriched variants
@@ -8962,16 +8937,41 @@ async function olGenerateEnriched() {
 
   const sampleBlock = sample ? 'STYLE REFERENCE (match this tone exactly):\n"""\n'+sample+'\n"""\n' : '';
 
-  const p1 = 'You are an elite LinkedIn recruiter ghostwriter creating InMails with 3-5x higher reply rates.\n\n';
+  const p1 = 'You are a top-tier recruiter copywriter. You write LinkedIn InMails for MASS SENDING — {firstName} is the only token, no individual candidate data.\n\n' +
+  'WHY MOST INMAILS GET DELETED IN 2 SECONDS:\n' +
+  '  BAD: Robotic self-intro every time — I am [Name] from the Talent team at [Company]\n' +
+  '  BAD: Vague flattery — I came across your profile and was really impressed\n' +
+  '  BAD: Generic hook — We are a fast-growing company with great culture\n' +
+  '  BAD: Weak close — this might be worth a look OR would love to connect\n' +
+  '  BAD: All 3 variants are the same skeleton with different middle sentences\n\n' +
+  'WHAT GETS A REPLY:\n' +
+  '  GOOD: Opens with something that stops the scroll — a specific fact, sharp question, bold statement\n' +
+  '  GOOD: Makes the role sound real — names the actual problem, scale, ownership\n' +
+  '  GOOD: Closes with a self-qualifier that makes the RIGHT person lean in\n' +
+  '  GOOD: Each variant has a different opener family, tone, and structure\n\n' +
+  'OPENER FAMILIES — each variant MUST use a different one:\n' +
+  '  [QUESTION]  Quick one, {firstName} — have you ever wanted to own [X] without [common blocker]?\n' +
+  '  [STATEMENT] [Company fact or scale]. The [role] hired now shapes what that becomes.\n' +
+  '  [PROBLEM]   [The specific hard thing about this role]. That is the problem on the table.\n' +
+  '  [OWNERSHIP] Day 1 at [Company]: you own [specific outcome]. No committee. Full remit.\n' +
+  '  [CONTRAST]  Most [role types] never get to [specific thing]. At [Company], this role does.\n\n' +
+  'SELF-QUALIFIER — replace this might be worth a look entirely:\n' +
+  '  BANNED: this might be worth a look\n' +
+  '  BANNED: thought you might find this interesting\n' +
+  '  USE: If owning [specific outcome] without [constraint] is the next problem you want — worth 20 minutes?\n' +
+  '  USE: If [specific skill] is your world and [company differentiator] sounds like the right stage — happy to share more.\n' +
+  '  USE: If [the hard problem from JD] sounds worth solving — [name], [company]. Worth a call?\n\n' +
+  'CONSTRAINT: {firstName} is the ONLY token. Never reference where the recipient works. Intro line MUST VARY across variants.\n\n';
   const p2 = 'RECRUITER: '+name+' at '+companyName+'\nJOB URL: '+url+'\nLOCATION: '+(location||'not specified')+'\n\n';
-  const p3 = 'EXTRACTED ROLE INTELLIGENCE:\n'
-    +'- Role Title: '+roleTitle+'\n'
-    +'- Core challenge: '+coreChallenge+'\n'
-    +'- Company USP: '+companyUSP+'\n'
-    +'- Key skills: '+keySkills+'\n'
-    +'- Career impact: '+careerImpact+'\n'
+  const p3 = 'ROLE INTEL (use these specifically inside message bodies):\n'
+    +'- Title: '+roleTitle+'\n'
+    +'- Hard problem: '+coreChallenge+'\n'
+    +'- Differentiator: '+companyUSP+'\n'
+    +'- Skills: '+keySkills+'\n'
+    +'- What it unlocks: '+careerImpact+'\n'
+    +'- Scale/scope: '+(scaleSignal||'not specified')+'\n'
     +'- Contract: '+contractType+'\n'
-    +'- Team mission: '+teamMission+'\n\n';
+    +'- Team: '+teamMission+'\n\n';
   const p4 = sampleBlock;
   const p5 = 'SUBJECT LINE: Generate 4 DISTINCT variants — each with a different angle (do NOT just vary the location).\n'
     + 'Angle 1 — company strength: e.g. "Building [product] at '+companyName+' — is this your next move?"\n'
@@ -8979,33 +8979,60 @@ async function olGenerateEnriched() {
     + 'Angle 3 — career growth: e.g. "A '+roleTitle+' role that could define your next chapter"\n'
     + 'Angle 4 — direct: e.g. "'+companyName+' | '+roleTitle+' | '+(location||'[Location]')+'"\n'
     + 'Rules: max 12 words each, extract EXACT role title from JD, no two should look similar.\n\n';
-  const p6 = 'MESSAGE STRUCTURE (follow EXACTLY):\n\n'
-    +'Hi {firstName},\n\n'
-    +'[Intro: "I am '+name+', part of the Talent Acquisition team at '+companyName+'. I hope you are doing well."]\n\n'
-    +'[HOOK PARAGRAPH - this is the key differentiator. 2 sentences. Make it feel written specifically for someone with their background.\n'
-    +'Variant A = TECH HOOK: reference the specific challenge ('+coreChallenge+') — frame it as a problem only deep experts can solve\n'
-    +'Variant B = IMPACT HOOK: paint the measurable impact and what success looks like 12 months in\n'
-    +'Variant C = GROWTH HOOK: frame the career trajectory and doors this role unlocks — mission ('+teamMission+')]\n\n'
-    +'We are looking for a '+roleTitle+' with deep expertise in '+keySkills+'.\n\n'
-    +'Role details: '+url+' - '+contractType+'\n\n'
-    +'[CTA: '+ctaInstr+']\n\n'
-    +'Best Regards,\n'+name+'\n\n'
-    +'CRITICAL: Every variant body MUST end with \\n\\nBest Regards,\\n'+name+'\n\n';
-  const p7 = 'RULES:\n'
-    +'- Body: 150-180 words total\n'
-    +'- BANNED: exciting opportunity, I came across your profile, hope this finds you well, passionate, fast-paced, dynamic, hit the ground running, unique opportunity\n'
-    +'- Use \\n\\n between paragraphs\n'
-    +'- Tone: peer-to-peer, intelligent, direct\n\n';
+  const _sc = scaleSignal && scaleSignal !== 'not specified' ? scaleSignal : '';
+  const _ch = coreChallenge || 'the core problem';
+  const _usp = companyUSP || 'what we are building';
+  const _ts = teamMission || 'a sharp team';
+  const _ci = careerImpact || 'full ownership';
+
+  const p6 = 'Write 3 variants — each DIFFERENT opener family, each genuinely distinct in structure and tone.\n\n'
+    +'━━ VARIANT A — PROBLEM OPENER ━━\n'
+    +'Start with the PROBLEM or a bold statement. Do NOT open with your name.\n'
+    +'Concrete opener options (adapt using role intel, pick best fit):\n'
+    +'  OPTION 1: "'+_ch+' — that is what we are hiring for at '+companyName+'."\n'
+    +'  OPTION 2: "Most '+roleTitle+'s spend careers working around problems they did not design. At '+companyName+', this role owns them."\n'
+    +(_sc ? '  OPTION 3: "'+_sc+' — and one '+roleTitle+' who owns the critical path. That is this role."\n' : '')
+    +'Then (2-3 sentences): what they own, why the problem is real, the career signal. Then role URL and contract.\n'
+    +'Self-qualifier (NOT this might be worth a look):  "If '+_ch.slice(0,55)+'... is the kind of problem you want — '+name+', '+companyName+'. Worth 20 minutes?"\n'
+    +'CTA: '+ctaInstr+' Sign-off: \\n\\nBest,\\n'+name+'\n\n'
+    +'━━ VARIANT B — QUESTION / CURIOSITY OPENER ━━\n'
+    +'Start with a question or sharp context. Intro line must differ from Variant A.\n'
+    +'Concrete opener options:\n'
+    +'  OPTION 1: "Quick one, {firstName} — have you ever wanted to own '+_ci+' without the usual red tape?"\n'
+    +'  OPTION 2: "'+_usp+'. We are hiring the '+roleTitle+' who helps us keep that edge."\n'
+    +'  OPTION 3: "We are at a specific point at '+companyName+' — '+(_sc||_ts)+'. The person who joins now shapes the next chapter."\n'
+    +'Then (2-3 sentences): what the company is building, why now, the team signal. Then role URL.\n'
+    +'Self-qualifier:  "If '+keySkills+' is your world and this problem sounds interesting — happy to share more. '+name+', '+companyName+'."\n'
+    +'CTA: '+ctaInstr+' Sign-off: \\n\\nBest,\\n'+name+'\n\n'
+    +'━━ VARIANT C — DIRECT OWNERSHIP OPENER ━━\n'
+    +'Drop straight into Day 1 ownership. Intro line must differ from A and B.\n'
+    +'Concrete opener options:\n'
+    +'  OPTION 1: "Day 1 at '+companyName+': you own '+_ci+'. No committee. No hand-holding."\n'
+    +(_sc ? '  OPTION 2: "'+_sc+'. The '+roleTitle+' we hire now designs the architecture for the next order of scale."\n' : '')
+    +'  OPTION 3: "The '+roleTitle+' joining '+companyName+' now gets something rare — '+_ci+' from scratch, in a company that has real traction."\n'
+    +'Then (2-3 sentences): scope of ownership, team, what success in 12 months looks like. Then role URL.\n'
+    +'Self-qualifier:  "If building '+_ci.slice(0,50)+'... from scratch is what you are looking for — this is it. Worth a conversation?"\n'
+    +'CTA: '+ctaInstr+' Sign-off: \\n\\nBest,\\n'+name+'\n\n'
+    +'HARD RULES all variants: (1) Intro line MUST differ across variants — never copy the same self-intro. (2) NEVER write this might be worth a look. (3) {firstName} is the only token — no candidate company. (4) \\n\\n between every paragraph. (5) 120-160 words per variant.\n';
+
+  const p7 = 'QUALITY CHECK before writing output:\n'
+    +'1. Does any variant open with I am [name] from the Talent team at [company]? Rewrite using a different opener family.\n'
+    +'2. Does any variant say this might be worth a look or thought you might find this interesting? Replace with a specific self-qualifier.\n'
+    +'3. Do all 3 variants have genuinely different openers and structures? If they look like the same template — rewrite.\n'
+    +'4. Does any variant mention the recipient employer? Remove it.\n'
+    +'5. Is the role problem specific and concrete — does it name the actual challenge? Make it real.\n'
+    +'BANNED: exciting opportunity, I came across your profile, hope this finds you well, this might be worth a look, unique opportunity, fast-paced, passionate team, I am [name] from the Talent team.\n'
+    +'Tone: smart, peer-to-peer, direct. Like a sharp colleague — not a recruiter filling a form.\n\n';
   const p8 = 'FOLLOW-UPS:\n'+fuInstr+'\n\n'+
-    'Follow-up structure:\n'+
+    'Follow-up structure (mass-send — NO candidate-specific details, NO mention of where they work):\n'+
     'Hi {firstName},\n\n'+
     '[Sentence 1: Light reference to first message — e.g. "I reached out last week about the '+roleTitle+' role at '+companyName+'."]\n\n'+
-    '[Sentence 2-3: NEW specific angle — a concrete detail about the team, product, company stage, or career impact. '+
-    'E.g. "The team is currently building X, which directly maps to the kind of work you have likely been doing at [their company type]. '+
-    'This is a rare chance to own Y from day one."]\n\n'+
+    '[Sentence 2-3: NEW angle not in first message — a concrete detail about the team, a company milestone, a specific thing the role unlocks. '+
+    'E.g. "The team just shipped X and is now scaling to Y — the next 12 months are the most interesting phase of this build." '+
+    'Do NOT reference the recipient\'s current company or background — keep it role/company focused.]\n\n'+
     '[Sentence 4: CTA — '+fuCTAenr+']\n\n'+
     'Best Regards,\n'+name+'\n\n'+
-    'ANTI-PATTERNS — never write these: "just checking in", "circling back", "touching base", "hope you are doing well", "I understand you are busy".\n'+
+    'ANTI-PATTERNS — never write: "just checking in", "circling back", "touching base", "I noticed you work at X", "given your background at Y".\n'+
     'CRITICAL: Best Regards and name MUST be on separate lines.';
   const p9 = 'Return ONLY valid JSON, no markdown:\n'
     +'{"subjectLines":["s1","s2","s3","s4"],"outreachVariants":[{"label":"Tech Hook","subject":"string","body":"string"},{"label":"Impact Hook","subject":"string","body":"string"},{"label":"Growth Hook","subject":"string","body":"string"}],"followUp":{"subject":"string","body":"string"}'+fuSchema+'}';
@@ -9320,7 +9347,7 @@ function olReset() {
   document.getElementById('ol-db-company-wrap').style.display = 'none';
 }
 
-// ── Personal Outreach (AI Chat) ──
+// ── Personal Outreach ──
 function switchPersonalResTab(tab) {
   document.getElementById('ptab-paste').classList.toggle('active', tab==='paste');
   document.getElementById('ptab-upload').classList.toggle('active', tab==='upload');
@@ -9395,6 +9422,15 @@ async function sendPersonalMessage() {
   if (res) ctx += `\n\n[CANDIDATE PROFILE]\n${res}`;
   const full = ctx ? ctx + '\n\n[REQUEST]\n' + text : text;
 
+  // Pull recruiter identity from saved profile
+  const _rp = rpGet();
+  const _rpName    = _rp.name    || '';
+  const _rpTitle   = _rp.title   || 'Talent Acquisition Specialist';
+  const _rpCompany = _rp.company || '';
+  const _signoff = _rpName
+    ? `\n\nBest regards,\n${_rpName}${_rpTitle ? '\n' + _rpTitle : ''}${_rpCompany ? '\n' + _rpCompany : ''}`
+    : '';
+
   addPersonalMsg('user', text);
   input.value = ''; input.style.height = 'auto';
   personalHistory.push({role:'user', content:full});
@@ -9407,11 +9443,67 @@ async function sendPersonalMessage() {
   typing.innerHTML = `<div class="avatar">🤖</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
   c.appendChild(typing); c.scrollTop = 99999;
 
-  const systemPrompt = `You are an expert talent acquisition specialist who writes highly personalized, compelling outreach messages for recruiters.
-Personalize based on candidate's specific background and experience. Lead with value to the candidate.
-For personal emails: 200-250 words, warm and human tone, clear subject line, compelling opening, role alignment paragraph, specific CTA.
-For follow-ups: progressively warmer or more direct based on context.
-Always provide subject line + body. Sound like a real human recruiter, not a template.`;
+  const systemPrompt = `You are a world-class recruiter who writes outreach that candidates actually reply to. You have placed talent at Stripe, Databricks, Notion, and top-tier startups. Your messages are known for being specific, human, and brief — never templated.
+
+CORE RULES:
+1. SPECIFICITY IS EVERYTHING. Every message must reference something concrete from the candidate's background — a company they worked at, a technology they used, a title they held, a career pattern you noticed. Generic openers ("I came across your profile") = instant delete.
+2. BREVITY. Emails: 120-160 words max. Subject lines: under 10 words. No fluff, no corporate jargon, no "I hope this finds you well".
+3. LEAD WITH VALUE TO THEM — not why you need to fill the role. What's in it for the candidate? Be specific.
+4. ONE CTA ONLY. Don't ask multiple questions. End with exactly one clear ask.
+5. SOUND HUMAN. Write like a smart colleague sending a note, not a recruiter filling a template.
+
+BANNED PHRASES (never use these):
+"exciting opportunity", "I came across your profile", "hope this finds you well", "passionate", "fast-paced", "dynamic team", "hit the ground running", "touching base", "circling back", "just checking in", "unique opportunity", "rockstar", "ninja", "competitive salary"
+
+FIRST OUTREACH — structure (follow exactly, with a blank line between every paragraph):
+Subject: [specific hook — their background or the problem to solve, max 9 words]
+
+Hi [FirstName],
+
+[INTRO — 1 sentence: who you are and why you're reaching out. E.g. "I'm [Name] from the Talent Acquisition team at [Company], and I'm reaching out because your background in [specific area] caught my attention."]
+
+[HOOK — 1 sentence: reference something specific from their background — a company, a technology, a project type, a career move. This must be personalised.]
+
+[ROLE — 1-2 sentences: what the role is and why it connects directly to THEIR specific experience. Not generic.]
+
+[VALUE — 1 sentence: one concrete reason this company or role is worth 20 minutes of their time.]
+
+[CTA — one question only: "Worth a 20-min call this week?"]
+
+[Sign-off]
+
+Total: 110-150 words. Every paragraph separated by a blank line. No wall of text.
+
+SPACING RULE: Use \n\n between every paragraph. Never run sentences together without a blank line between them.
+
+FOLLOW-UP — structure:
+- FU1: Add ONE new angle not in first message (team detail, company momentum, or a specific thing the role unlocks for their career). 80-110 words. Don't mention you're following up until sentence 2.
+- FU2: More direct. Acknowledge it's your second note. One strong reason. 70-90 words.
+- FU3 (final): "Last one, I promise" tone. Honest. Brief. Leave the door open. 60-75 words.
+
+GOOD FIRST EMAIL EXAMPLE:
+Subject: Billing infra at scale — worth 20 mins?
+
+Hi Priya,
+
+I'm [Name] from the Talent team at [Company] — reaching out because your work on payments infrastructure at Razorpay caught my attention.
+
+Three years on multi-currency, high-availability billing at that scale is exactly the kind of background we're hiring for.
+
+We're building the financial layer for [X], used by [Y], and the team is tackling the next order of magnitude of those same problems.
+
+Worth a quick call this week?
+
+BAD FIRST EMAIL EXAMPLE (never write like this):
+Subject: Exciting Opportunity at [Company]
+Hi Priya, I hope this message finds you well! I came across your profile and was very impressed by your background. We have an exciting opportunity that I think would be a great fit for your skills and experience. Please let me know if you'd be interested in learning more!
+
+Always output: Subject line on its own line, then the full message body. If context (JD or candidate profile) is provided, use it — every specific detail you include increases reply rate.
+
+SIGN-OFF: Every message must end with exactly this sign-off on separate lines (no variations, no placeholders):` + (_signoff || '\n\nBest regards,\n[Your Name]') + ``;
+
+
+
 
   try {
     let reply;
